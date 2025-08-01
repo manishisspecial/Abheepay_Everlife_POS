@@ -1,151 +1,52 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useQuery } from 'react-query';
 import { retailersAPI } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import {
   ShoppingBagIcon,
+  CheckCircleIcon,
+  XCircleIcon,
   PlusIcon,
   MagnifyingGlassIcon,
   EyeIcon,
-  PencilIcon,
-  TrashIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  UserIcon,
+  EnvelopeIcon,
+  PhoneIcon,
+  MapPinIcon,
   BuildingStorefrontIcon,
+  ChartBarIcon,
+  ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
-import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 
 const Retailers = () => {
-  const [retailers, setRetailers] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [distributorFilter, setDistributorFilter] = useState('all');
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedRetailer, setSelectedRetailer] = useState(null);
-  const [showEditModal, setShowEditModal] = useState(false);
 
-  // Form state for adding/editing retailers
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    shop_name: '',
-    distributor_id: '',
-    address: '',
-    city: '',
-    state: '',
-    pincode: '',
-    gst_number: '',
-    pan_number: '',
-    status: 'ACTIVE'
-  });
-
-  useEffect(() => {
-    fetchRetailers();
-  }, []);
-
-  const fetchRetailers = async () => {
-    try {
-      setLoading(true);
-      const data = await retailersAPI.getAll();
-      setRetailers(data);
-    } catch (error) {
-      console.error('Error fetching retailers:', error);
-      toast.error('Failed to load retailers');
-    } finally {
-      setLoading(false);
+  const { data, isLoading, error, refetch } = useQuery(
+    ['retailers', statusFilter, distributorFilter],
+    () => retailersAPI.getAll({
+      status: statusFilter === 'all' ? undefined : statusFilter,
+      distributorId: distributorFilter === 'all' ? undefined : distributorFilter
+    }),
+    {
+      keepPreviousData: true,
     }
-  };
+  );
 
-  const handleAddRetailer = async (e) => {
-    e.preventDefault();
-    try {
-      await retailersAPI.create(formData);
-      toast.success('Retailer added successfully!');
-      setShowAddModal(false);
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        shop_name: '',
-        distributor_id: '',
-        address: '',
-        city: '',
-        state: '',
-        pincode: '',
-        gst_number: '',
-        pan_number: '',
-        status: 'ACTIVE'
-      });
-      fetchRetailers();
-    } catch (error) {
-      console.error('Error adding retailer:', error);
-      toast.error('Failed to add retailer');
-    }
-  };
-
-  const handleEditRetailer = async (e) => {
-    e.preventDefault();
-    try {
-      await retailersAPI.update(selectedRetailer.id, formData);
-      toast.success('Retailer updated successfully!');
-      setShowEditModal(false);
-      setSelectedRetailer(null);
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        shop_name: '',
-        distributor_id: '',
-        address: '',
-        city: '',
-        state: '',
-        pincode: '',
-        gst_number: '',
-        pan_number: '',
-        status: 'ACTIVE'
-      });
-      fetchRetailers();
-    } catch (error) {
-      console.error('Error updating retailer:', error);
-      toast.error('Failed to update retailer');
-    }
-  };
-
-  const handleDeleteRetailer = async (retailerId) => {
-    if (window.confirm('Are you sure you want to delete this retailer?')) {
-      try {
-        await retailersAPI.delete(retailerId);
-        toast.success('Retailer deleted successfully!');
-        fetchRetailers();
-      } catch (error) {
-        console.error('Error deleting retailer:', error);
-        toast.error('Failed to delete retailer');
-      }
-    }
-  };
-
-  const openEditModal = (retailer) => {
-    setSelectedRetailer(retailer);
-    setFormData({
-      name: retailer.name,
-      email: retailer.email,
-      phone: retailer.phone,
-      shop_name: retailer.shop_name || '',
-      distributor_id: retailer.distributor_id || '',
-      address: retailer.address || '',
-      city: retailer.city || '',
-      state: retailer.state || '',
-      pincode: retailer.pincode || '',
-      gst_number: retailer.gst_number || '',
-      pan_number: retailer.pan_number || '',
-      status: retailer.status
-    });
-    setShowEditModal(true);
-  };
+  const filteredRetailers = data?.retailers?.filter(retailer => {
+    if (!searchTerm) return true;
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      retailer.name.toLowerCase().includes(searchLower) ||
+      retailer.email.toLowerCase().includes(searchLower) ||
+      retailer.shop_name.toLowerCase().includes(searchLower) ||
+      retailer.address.toLowerCase().includes(searchLower) ||
+      retailer.distributor.name.toLowerCase().includes(searchLower)
+    );
+  }) || [];
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -154,7 +55,7 @@ const Retailers = () => {
       case 'INACTIVE':
         return <XCircleIcon className="h-5 w-5 text-red-500" />;
       default:
-        return <XCircleIcon className="h-5 w-5 text-gray-400" />;
+        return <ExclamationTriangleIcon className="h-5 w-5 text-gray-400" />;
     }
   };
 
@@ -169,40 +70,27 @@ const Retailers = () => {
     }
   };
 
-  const filteredRetailers = retailers.filter(retailer => {
-    const matchesSearch = !searchTerm || 
-      retailer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      retailer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      retailer.shop_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      retailer.city.toLowerCase().includes(searchTerm.toLowerCase());
+  if (isLoading) return <LoadingSpinner />;
+  if (error) {
+    toast.error('Failed to load retailers');
+    return <div className="text-red-500 text-center p-4">Error loading retailers</div>;
+  }
 
-    const matchesStatus = statusFilter === 'all' || retailer.status === statusFilter;
-    const matchesDistributor = distributorFilter === 'all' || retailer.distributor_id === distributorFilter;
-
-    return matchesSearch && matchesStatus && matchesDistributor;
-  });
-
-  const stats = {
-    total: retailers.length,
-    active: retailers.filter(r => r.status === 'ACTIVE').length,
-    inactive: retailers.filter(r => r.status === 'INACTIVE').length,
-  };
-
-  if (loading) return <LoadingSpinner />;
+  const stats = data?.stats || { total: 0, active: 0, inactive: 0 };
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Retailers Management</h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <h1 className="text-3xl font-bold text-gray-900">Retailers Management</h1>
+          <p className="mt-2 text-sm text-gray-600">
             Manage retailer accounts and information
           </p>
         </div>
         <button
           onClick={() => setShowAddModal(true)}
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
         >
           <PlusIcon className="h-4 w-4 mr-2" />
           Add Retailer
@@ -210,49 +98,55 @@ const Retailers = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+        <div className="bg-white overflow-hidden shadow-lg rounded-xl border border-gray-100">
+          <div className="p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <ShoppingBagIcon className="h-6 w-6 text-blue-600" />
+                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                  <ShoppingBagIcon className="h-5 w-5 text-white" />
+                </div>
               </div>
-              <div className="ml-5 w-0 flex-1">
+              <div className="ml-4 w-0 flex-1">
                 <dl>
                   <dt className="text-sm font-medium text-gray-500 truncate">Total Retailers</dt>
-                  <dd className="text-lg font-medium text-gray-900">{stats.total}</dd>
+                  <dd className="text-2xl font-bold text-gray-900">{stats.total}</dd>
                 </dl>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
+        <div className="bg-white overflow-hidden shadow-lg rounded-xl border border-gray-100">
+          <div className="p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <CheckCircleIcon className="h-6 w-6 text-green-600" />
+                <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-green-600 rounded-lg flex items-center justify-center">
+                  <CheckCircleIcon className="h-5 w-5 text-white" />
+                </div>
               </div>
-              <div className="ml-5 w-0 flex-1">
+              <div className="ml-4 w-0 flex-1">
                 <dl>
                   <dt className="text-sm font-medium text-gray-500 truncate">Active</dt>
-                  <dd className="text-lg font-medium text-gray-900">{stats.active}</dd>
+                  <dd className="text-2xl font-bold text-gray-900">{stats.active}</dd>
                 </dl>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
+        <div className="bg-white overflow-hidden shadow-lg rounded-xl border border-gray-100">
+          <div className="p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <XCircleIcon className="h-6 w-6 text-red-600" />
+                <div className="w-8 h-8 bg-gradient-to-r from-red-500 to-red-600 rounded-lg flex items-center justify-center">
+                  <XCircleIcon className="h-5 w-5 text-white" />
+                </div>
               </div>
-              <div className="ml-5 w-0 flex-1">
+              <div className="ml-4 w-0 flex-1">
                 <dl>
                   <dt className="text-sm font-medium text-gray-500 truncate">Inactive</dt>
-                  <dd className="text-lg font-medium text-gray-900">{stats.inactive}</dd>
+                  <dd className="text-2xl font-bold text-gray-900">{stats.inactive}</dd>
                 </dl>
               </div>
             </div>
@@ -260,10 +154,10 @@ const Retailers = () => {
         </div>
       </div>
 
-      {/* Filters and Search */}
-      <div className="bg-white shadow rounded-lg">
-        <div className="px-4 py-5 sm:p-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+      {/* Search and Filters */}
+      <div className="bg-white shadow-lg rounded-xl border border-gray-100">
+        <div className="p-6">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
             <div className="flex-1 max-w-lg">
               <label htmlFor="search" className="sr-only">Search retailers</label>
               <div className="relative">
@@ -273,7 +167,7 @@ const Retailers = () => {
                 <input
                   id="search"
                   name="search"
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                   placeholder="Search by name, email, shop, or city..."
                   type="search"
                   value={searchTerm}
@@ -282,11 +176,11 @@ const Retailers = () => {
               </div>
             </div>
 
-            <div className="flex space-x-2">
+            <div className="flex flex-wrap gap-3">
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="all">All Status</option>
                 <option value="ACTIVE">Active</option>
@@ -296,10 +190,17 @@ const Retailers = () => {
               <select
                 value={distributorFilter}
                 onChange={(e) => setDistributorFilter(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="all">All Distributors</option>
-                {/* Add distributor options here */}
+                <option value="1">ABC Distributors</option>
+                <option value="2">XYZ Distributors</option>
+                <option value="3">Instant Mudra Solutions</option>
+                <option value="4">Dhamillion Trading</option>
+                <option value="5">Quickpay Solutions</option>
+                <option value="6">Paymatrix Technologies</option>
+                <option value="7">DMCPAY Solutions</option>
+                <option value="8">Raju Mobile Solutions</option>
               </select>
             </div>
           </div>
@@ -307,474 +208,118 @@ const Retailers = () => {
       </div>
 
       {/* Retailers List */}
-      <div className="bg-white shadow rounded-lg">
-        <div className="px-4 py-5 sm:p-6">
-          <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
+      <div className="bg-white shadow-lg rounded-xl border border-gray-100">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+            <ChartBarIcon className="h-5 w-5 text-blue-500 mr-2" />
             Retailers ({filteredRetailers.length})
           </h3>
+        </div>
 
-          {filteredRetailers.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Retailer Info
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Contact Details
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Location
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Business Details
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
+        {filteredRetailers.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Retailer Info
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Contact Details
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Shop Details
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Distributor
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredRetailers.map((retailer) => (
+                  <tr key={retailer.id} className="hover:bg-gray-50 transition-colors duration-150">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0 h-10 w-10">
+                          <div className="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                            <ShoppingBagIcon className="h-6 w-6 text-purple-600" />
+                          </div>
+                        </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900">{retailer.name}</div>
+                          <div className="text-sm text-gray-500">ID: {retailer.id}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center text-sm text-gray-900 mb-1">
+                        <EnvelopeIcon className="h-4 w-4 mr-2 text-gray-400" />
+                        {retailer.email}
+                      </div>
+                      <div className="flex items-center text-sm text-gray-500">
+                        <PhoneIcon className="h-4 w-4 mr-2 text-gray-400" />
+                        {retailer.phone}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">{retailer.shop_name}</div>
+                      <div className="flex items-center text-sm text-gray-500 mt-1">
+                        <MapPinIcon className="h-4 w-4 mr-1" />
+                        {retailer.address}
+                      </div>
+                      <div className="text-sm text-gray-500">GST: {retailer.gst_number}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0 h-8 w-8">
+                          <div className="h-8 w-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                            <BuildingStorefrontIcon className="h-4 w-4 text-blue-600" />
+                          </div>
+                        </div>
+                        <div className="ml-3">
+                          <div className="text-sm font-medium text-gray-900">{retailer.distributor.name}</div>
+                          <div className="text-sm text-gray-500">{retailer.distributor.company}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        {getStatusIcon(retailer.status)}
+                        <span className="ml-2">{getStatusBadge(retailer.status)}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button
+                        onClick={() => {
+                          setSelectedRetailer(retailer);
+                          setShowAddModal(true);
+                        }}
+                        className="text-blue-600 hover:text-blue-900 font-medium"
+                      >
+                        <EyeIcon className="h-4 w-4" />
+                      </button>
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredRetailers.map((retailer) => (
-                    <tr key={retailer.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="flex-shrink-0 h-10 w-10">
-                            <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
-                              <UserIcon className="h-6 w-6 text-green-600" />
-                            </div>
-                          </div>
-                          <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">{retailer.name}</div>
-                            <div className="text-sm text-gray-500">{retailer.shop_name}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{retailer.email}</div>
-                        <div className="text-sm text-gray-500">{retailer.phone}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{retailer.city}, {retailer.state}</div>
-                        <div className="text-sm text-gray-500">{retailer.pincode}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">GST: {retailer.gst_number || 'N/A'}</div>
-                        <div className="text-sm text-gray-500">PAN: {retailer.pan_number || 'N/A'}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          {getStatusIcon(retailer.status)}
-                          <span className="ml-2">{getStatusBadge(retailer.status)}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => openEditModal(retailer)}
-                            className="text-blue-600 hover:text-blue-900"
-                          >
-                            <PencilIcon className="h-4 w-4" />
-                          </button>
-                          <Link
-                            to={`/retailers/${retailer.id}`}
-                            className="text-gray-600 hover:text-gray-900"
-                          >
-                            <EyeIcon className="h-4 w-4" />
-                          </Link>
-                          <button
-                            onClick={() => handleDeleteRetailer(retailer.id)}
-                            className="text-red-600 hover:text-red-900"
-                          >
-                            <TrashIcon className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <ShoppingBagIcon className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">No retailers found</h3>
-              <p className="mt-1 text-sm text-gray-500">
-                {searchTerm ? 'Try adjusting your search terms.' : 'Get started by adding your first retailer.'}
-              </p>
-            </div>
-          )}
-        </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <ShoppingBagIcon className="mx-auto h-12 w-12 text-gray-400" />
+            <h3 className="mt-2 text-sm font-medium text-gray-900">No retailers found</h3>
+            <p className="mt-1 text-sm text-gray-500">
+              {searchTerm ? 'Try adjusting your search terms.' : 'Get started by adding your first retailer.'}
+            </p>
+          </div>
+        )}
       </div>
-
-      {/* Add Retailer Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Add New Retailer</h3>
-              
-              <form onSubmit={handleAddRetailer} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Name *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email *
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Phone *
-                  </label>
-                  <input
-                    type="tel"
-                    required
-                    value={formData.phone}
-                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Shop Name
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.shop_name}
-                    onChange={(e) => setFormData({...formData, shop_name: e.target.value})}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Distributor ID
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.distributor_id}
-                    onChange={(e) => setFormData({...formData, distributor_id: e.target.value})}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    placeholder="Enter distributor ID"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Address
-                  </label>
-                  <textarea
-                    value={formData.address}
-                    onChange={(e) => setFormData({...formData, address: e.target.value})}
-                    rows={2}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  />
-                </div>
-
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      City
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.city}
-                      onChange={(e) => setFormData({...formData, city: e.target.value})}
-                      className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      State
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.state}
-                      onChange={(e) => setFormData({...formData, state: e.target.value})}
-                      className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Pincode
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.pincode}
-                      onChange={(e) => setFormData({...formData, pincode: e.target.value})}
-                      className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      GST Number
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.gst_number}
-                      onChange={(e) => setFormData({...formData, gst_number: e.target.value})}
-                      className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      PAN Number
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.pan_number}
-                      onChange={(e) => setFormData({...formData, pan_number: e.target.value})}
-                      className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Status *
-                  </label>
-                  <select
-                    required
-                    value={formData.status}
-                    onChange={(e) => setFormData({...formData, status: e.target.value})}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  >
-                    <option value="ACTIVE">Active</option>
-                    <option value="INACTIVE">Inactive</option>
-                  </select>
-                </div>
-
-                <div className="flex justify-end space-x-3 mt-6">
-                  <button
-                    type="button"
-                    onClick={() => setShowAddModal(false)}
-                    className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  >
-                    Add Retailer
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Retailer Modal */}
-      {showEditModal && selectedRetailer && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Edit Retailer</h3>
-              
-              <form onSubmit={handleEditRetailer} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Name *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email *
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Phone *
-                  </label>
-                  <input
-                    type="tel"
-                    required
-                    value={formData.phone}
-                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Shop Name
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.shop_name}
-                    onChange={(e) => setFormData({...formData, shop_name: e.target.value})}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Distributor ID
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.distributor_id}
-                    onChange={(e) => setFormData({...formData, distributor_id: e.target.value})}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    placeholder="Enter distributor ID"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Address
-                  </label>
-                  <textarea
-                    value={formData.address}
-                    onChange={(e) => setFormData({...formData, address: e.target.value})}
-                    rows={2}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  />
-                </div>
-
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      City
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.city}
-                      onChange={(e) => setFormData({...formData, city: e.target.value})}
-                      className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      State
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.state}
-                      onChange={(e) => setFormData({...formData, state: e.target.value})}
-                      className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Pincode
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.pincode}
-                      onChange={(e) => setFormData({...formData, pincode: e.target.value})}
-                      className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      GST Number
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.gst_number}
-                      onChange={(e) => setFormData({...formData, gst_number: e.target.value})}
-                      className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      PAN Number
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.pan_number}
-                      onChange={(e) => setFormData({...formData, pan_number: e.target.value})}
-                      className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Status *
-                  </label>
-                  <select
-                    required
-                    value={formData.status}
-                    onChange={(e) => setFormData({...formData, status: e.target.value})}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  >
-                    <option value="ACTIVE">Active</option>
-                    <option value="INACTIVE">Inactive</option>
-                  </select>
-                </div>
-
-                <div className="flex justify-end space-x-3 mt-6">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowEditModal(false);
-                      setSelectedRetailer(null);
-                    }}
-                    className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  >
-                    Update Retailer
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

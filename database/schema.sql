@@ -4,14 +4,28 @@
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+-- Drop existing types if they exist (for clean re-runs)
+DROP TYPE IF EXISTS user_role CASCADE;
+DROP TYPE IF EXISTS machine_status CASCADE;
+DROP TYPE IF EXISTS assignment_status CASCADE;
+DROP TYPE IF EXISTS settlement_type CASCADE;
+
 -- Create custom types
 CREATE TYPE user_role AS ENUM ('admin', 'distributor', 'retailer');
 CREATE TYPE machine_status AS ENUM ('AVAILABLE', 'ASSIGNED', 'MAINTENANCE', 'RETIRED');
 CREATE TYPE assignment_status AS ENUM ('ACTIVE', 'INACTIVE', 'RETURNED', 'REASSIGNED');
 CREATE TYPE settlement_type AS ENUM ('T+0', 'T+1', 'T+2', 'T+3');
 
+-- Drop existing tables if they exist (for clean re-runs)
+DROP TABLE IF EXISTS settlements CASCADE;
+DROP TABLE IF EXISTS assignments CASCADE;
+DROP TABLE IF EXISTS machines CASCADE;
+DROP TABLE IF EXISTS retailers CASCADE;
+DROP TABLE IF EXISTS distributors CASCADE;
+DROP TABLE IF EXISTS admins CASCADE;
+
 -- Create admins table
-CREATE TABLE IF NOT EXISTS admins (
+CREATE TABLE admins (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
@@ -22,7 +36,7 @@ CREATE TABLE IF NOT EXISTS admins (
 );
 
 -- Create distributors table
-CREATE TABLE IF NOT EXISTS distributors (
+CREATE TABLE distributors (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
@@ -36,7 +50,7 @@ CREATE TABLE IF NOT EXISTS distributors (
 );
 
 -- Create retailers table
-CREATE TABLE IF NOT EXISTS retailers (
+CREATE TABLE retailers (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
@@ -51,7 +65,7 @@ CREATE TABLE IF NOT EXISTS retailers (
 );
 
 -- Create machines table
-CREATE TABLE IF NOT EXISTS machines (
+CREATE TABLE machines (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     serial_number VARCHAR(100) UNIQUE NOT NULL,
     mid VARCHAR(50) UNIQUE NOT NULL,
@@ -69,7 +83,7 @@ CREATE TABLE IF NOT EXISTS machines (
 );
 
 -- Create assignments table
-CREATE TABLE IF NOT EXISTS assignments (
+CREATE TABLE assignments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     machine_id UUID REFERENCES machines(id) ON DELETE CASCADE,
     distributor_id UUID REFERENCES distributors(id) ON DELETE SET NULL,
@@ -86,7 +100,7 @@ CREATE TABLE IF NOT EXISTS assignments (
 );
 
 -- Create settlements table
-CREATE TABLE IF NOT EXISTS settlements (
+CREATE TABLE settlements (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     machine_id UUID REFERENCES machines(id) ON DELETE CASCADE,
     mid VARCHAR(50) NOT NULL,
@@ -100,18 +114,18 @@ CREATE TABLE IF NOT EXISTS settlements (
 );
 
 -- Create indexes for better performance
-CREATE INDEX IF NOT EXISTS idx_machines_serial_number ON machines(serial_number);
-CREATE INDEX IF NOT EXISTS idx_machines_mid_tid ON machines(mid, tid);
-CREATE INDEX IF NOT EXISTS idx_machines_status ON machines(status);
-CREATE INDEX IF NOT EXISTS idx_assignments_machine_id ON assignments(machine_id);
-CREATE INDEX IF NOT EXISTS idx_assignments_distributor_id ON assignments(distributor_id);
-CREATE INDEX IF NOT EXISTS idx_assignments_retailer_id ON assignments(retailer_id);
-CREATE INDEX IF NOT EXISTS idx_assignments_status ON assignments(status);
-CREATE INDEX IF NOT EXISTS idx_assignments_valid_from ON assignments(valid_from);
-CREATE INDEX IF NOT EXISTS idx_assignments_valid_to ON assignments(valid_to);
-CREATE INDEX IF NOT EXISTS idx_retailers_distributor_id ON retailers(distributor_id);
-CREATE INDEX IF NOT EXISTS idx_settlements_machine_id ON settlements(machine_id);
-CREATE INDEX IF NOT EXISTS idx_settlements_date ON settlements(settlement_date);
+CREATE INDEX idx_machines_serial_number ON machines(serial_number);
+CREATE INDEX idx_machines_mid_tid ON machines(mid, tid);
+CREATE INDEX idx_machines_status ON machines(status);
+CREATE INDEX idx_assignments_machine_id ON assignments(machine_id);
+CREATE INDEX idx_assignments_distributor_id ON assignments(distributor_id);
+CREATE INDEX idx_assignments_retailer_id ON assignments(retailer_id);
+CREATE INDEX idx_assignments_status ON assignments(status);
+CREATE INDEX idx_assignments_valid_from ON assignments(valid_from);
+CREATE INDEX idx_assignments_valid_to ON assignments(valid_to);
+CREATE INDEX idx_retailers_distributor_id ON retailers(distributor_id);
+CREATE INDEX idx_settlements_machine_id ON settlements(machine_id);
+CREATE INDEX idx_settlements_date ON settlements(settlement_date);
 
 -- Create updated_at trigger function
 CREATE OR REPLACE FUNCTION update_updated_at_column()

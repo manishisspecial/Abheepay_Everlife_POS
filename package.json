@@ -7,9 +7,10 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "client": "cd client && npm start",
-    "build": "cd client && npm run build",
+    "build": "node build.js",
     "install-client": "cd client && npm install",
     "heroku-postbuild": "npm run install-client && npm run build",
+    "vercel-build": "npm run build",
     "dev-full": "concurrently \"npm run dev\" \"npm run client\""
   },
   "dependencies": {

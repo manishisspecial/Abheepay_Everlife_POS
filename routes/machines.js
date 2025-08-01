@@ -1,119 +1,105 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const Machine = require('../models/Machine');
-const Assignment = require('../models/Assignment');
 
 const router = express.Router();
 
-// Middleware to authenticate token
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ error: 'Access token required' });
-  }
-
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) {
-      return res.status(403).json({ error: 'Invalid or expired token' });
-    }
-    req.user = user;
-    next();
-  });
-};
-
-// Validation for machine creation
-const createMachineValidation = [
-  body('serialNumber').trim().isLength({ min: 3, max: 50 }),
-  body('mid').trim().isLength({ min: 3, max: 50 }),
-  body('tid').trim().isLength({ min: 3, max: 50 }),
-  body('type').isIn(['POS', 'SOUNDBOX']),
-  body('model').optional().trim().isLength({ max: 100 }),
-  body('manufacturer').optional().trim().isLength({ max: 100 })
+// Demo machines data with B2B/B2C partners
+const demoMachines = [
+  // Telering B2B Partners - POS Machines
+  { id: '1', serialNumber: 'TLR-IM191-001', mid: 'MID191001', tid: 'TID191001', type: 'POS', model: 'Instant Mudra-191', manufacturer: 'Telering', status: 'ASSIGNED', partner: 'Instant Mudra', partnerType: 'B2B' },
+  { id: '2', serialNumber: 'TLR-IM191-002', mid: 'MID191002', tid: 'TID191002', type: 'POS', model: 'Instant Mudra-191', manufacturer: 'Telering', status: 'ASSIGNED', partner: 'Instant Mudra', partnerType: 'B2B' },
+  { id: '3', serialNumber: 'TLR-DH6-001', mid: 'MID6001', tid: 'TID6001', type: 'POS', model: 'Dhamillion-6', manufacturer: 'Telering', status: 'ASSIGNED', partner: 'Dhamillion', partnerType: 'B2B' },
+  { id: '4', serialNumber: 'TLR-QP10-001', mid: 'MID10001', tid: 'TID10001', type: 'POS', model: 'Quickpay-10', manufacturer: 'Telering', status: 'ASSIGNED', partner: 'Quickpay', partnerType: 'B2B' },
+  { id: '5', serialNumber: 'TLR-PM10-001', mid: 'MID10P001', tid: 'TID10P001', type: 'POS', model: 'Paymatrix-10', manufacturer: 'Telering', status: 'ASSIGNED', partner: 'Paymatrix', partnerType: 'B2B' },
+  { id: '6', serialNumber: 'TLR-DMC28-001', mid: 'MID28D001', tid: 'TID28D001', type: 'POS', model: 'DMCPAY-28', manufacturer: 'Telering', status: 'ASSIGNED', partner: 'DMCPAY', partnerType: 'B2B' },
+  { id: '7', serialNumber: 'TLR-RM11-001', mid: 'MID11R001', tid: 'TID11R001', type: 'POS', model: 'Raju Mobile-11', manufacturer: 'Telering', status: 'ASSIGNED', partner: 'Raju Mobile', partnerType: 'B2B' },
+  
+  // Telering B2B Partners - Soundbox (100 QR)
+  { id: '8', serialNumber: 'TLR-SB-B2B-001', mid: 'MIDSB001', tid: 'TIDSB001', type: 'SOUNDBOX', model: 'Telering-1000', manufacturer: 'Telering', status: 'ASSIGNED', partner: 'Instant Mudra', partnerType: 'B2B', qrCode: 'QR_TLR_B2B_001', hasStandee: true },
+  { id: '9', serialNumber: 'TLR-SB-B2B-002', mid: 'MIDSB002', tid: 'TIDSB002', type: 'SOUNDBOX', model: 'Telering-1000', manufacturer: 'Telering', status: 'ASSIGNED', partner: 'Dhamillion', partnerType: 'B2B', qrCode: 'QR_TLR_B2B_002', hasStandee: true },
+  { id: '10', serialNumber: 'TLR-SB-B2B-003', mid: 'MIDSB003', tid: 'TIDSB003', type: 'SOUNDBOX', model: 'Telering-1000', manufacturer: 'Telering', status: 'ASSIGNED', partner: 'Quickpay', partnerType: 'B2B', qrCode: 'QR_TLR_B2B_003', hasStandee: true },
+  
+  // Telering B2C Available - POS Machines
+  { id: '11', serialNumber: 'TLR-B2C-001', mid: 'MIDB2C001', tid: 'TIDB2C001', type: 'POS', model: 'Telering-390', manufacturer: 'Telering', status: 'AVAILABLE', partner: 'B2C', partnerType: 'B2C' },
+  { id: '12', serialNumber: 'TLR-B2C-002', mid: 'MIDB2C002', tid: 'TIDB2C002', type: 'POS', model: 'Telering-390', manufacturer: 'Telering', status: 'AVAILABLE', partner: 'B2C', partnerType: 'B2C' },
+  { id: '13', serialNumber: 'TLR-B2C-003', mid: 'MIDB2C003', tid: 'TIDB2C003', type: 'POS', model: 'Telering-390', manufacturer: 'Telering', status: 'AVAILABLE', partner: 'B2C', partnerType: 'B2C' },
+  
+  // Telering B2C Available - Soundbox
+  { id: '14', serialNumber: 'TLR-SB-B2C-001', mid: 'MIDSBB2C001', tid: 'TIDSBB2C001', type: 'SOUNDBOX', model: 'Telering-1000', manufacturer: 'Telering', status: 'AVAILABLE', partner: 'B2C', partnerType: 'B2C', qrCode: 'QR_TLR_B2C_001', hasStandee: true },
+  { id: '15', serialNumber: 'TLR-SB-B2C-002', mid: 'MIDSBB2C002', tid: 'TIDSBB2C002', type: 'SOUNDBOX', model: 'Telering-1000', manufacturer: 'Telering', status: 'AVAILABLE', partner: 'B2C', partnerType: 'B2C', qrCode: 'QR_TLR_B2C_002', hasStandee: false },
+  
+  // Everlife B2B Partners - POS Machines
+  { id: '16', serialNumber: 'EVL-IM101-001', mid: 'MID101E001', tid: 'TID101E001', type: 'POS', model: 'Instant Mudra-101', manufacturer: 'Everlife', status: 'ASSIGNED', partner: 'Instant Mudra', partnerType: 'B2B' },
+  { id: '17', serialNumber: 'EVL-IM101-002', mid: 'MID101E002', tid: 'TID101E002', type: 'POS', model: 'Instant Mudra-101', manufacturer: 'Everlife', status: 'ASSIGNED', partner: 'Instant Mudra', partnerType: 'B2B' },
+  { id: '18', serialNumber: 'EVL-DMC80-001', mid: 'MID80E001', tid: 'TID80E001', type: 'POS', model: 'DMCPAY-80', manufacturer: 'Everlife', status: 'ASSIGNED', partner: 'DMCPAY', partnerType: 'B2B' },
+  { id: '19', serialNumber: 'EVL-RM40-001', mid: 'MID40E001', tid: 'TID40E001', type: 'POS', model: 'Raju Mobile-40', manufacturer: 'Everlife', status: 'ASSIGNED', partner: 'Raju Mobile', partnerType: 'B2B' },
+  
+  // Everlife B2C Available - POS Machines
+  { id: '20', serialNumber: 'EVL-B2C-001', mid: 'MIDB2CE001', tid: 'TIDB2CE001', type: 'POS', model: 'Everlife-251', manufacturer: 'Everlife', status: 'AVAILABLE', partner: 'B2C', partnerType: 'B2C' },
+  { id: '21', serialNumber: 'EVL-B2C-002', mid: 'MIDB2CE002', tid: 'TIDB2CE002', type: 'POS', model: 'Everlife-251', manufacturer: 'Everlife', status: 'AVAILABLE', partner: 'B2C', partnerType: 'B2C' },
+  { id: '22', serialNumber: 'EVL-B2C-003', mid: 'MIDB2CE003', tid: 'TIDB2CE003', type: 'POS', model: 'Everlife-251', manufacturer: 'Everlife', status: 'AVAILABLE', partner: 'B2C', partnerType: 'B2C' },
+  
+  // Maintenance Machines
+  { id: '23', serialNumber: 'TLR-MAINT-001', mid: 'MIDMAINT001', tid: 'TIDMAINT001', type: 'POS', model: 'Telering-390', manufacturer: 'Telering', status: 'MAINTENANCE', partner: 'B2C', partnerType: 'B2C' },
+  { id: '24', serialNumber: 'EVL-MAINT-001', mid: 'MIDMAINTE001', tid: 'TIDMAINTE001', type: 'SOUNDBOX', model: 'Everlife-251', manufacturer: 'Everlife', status: 'MAINTENANCE', partner: 'B2C', partnerType: 'B2C', qrCode: 'QR_EVL_MAINT_001', hasStandee: false }
 ];
-
-// Validation for machine update
-const updateMachineValidation = [
-  body('serialNumber').optional().trim().isLength({ min: 3, max: 50 }),
-  body('mid').optional().trim().isLength({ min: 3, max: 50 }),
-  body('tid').optional().trim().isLength({ min: 3, max: 50 }),
-  body('type').optional().isIn(['POS', 'SOUNDBOX']),
-  body('model').optional().trim().isLength({ max: 100 }),
-  body('manufacturer').optional().trim().isLength({ max: 100 }),
-  body('status').optional().isIn(['AVAILABLE', 'ASSIGNED', 'MAINTENANCE', 'RETIRED'])
-];
-
-// @route   POST /api/machines
-// @desc    Create a new machine
-// @access  Private (Admin only)
-router.post('/', authenticateToken, createMachineValidation, async (req, res) => {
-  try {
-    // Check if user is admin
-    if (req.user.userType !== 'admin') {
-      return res.status(403).json({ error: 'Access denied. Admin only.' });
-    }
-
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
-    const { serialNumber, mid, tid, type, model, manufacturer } = req.body;
-
-    // Check if machine with same serial number already exists
-    const existingMachine = await Machine.findBySerialNumber(serialNumber);
-    if (existingMachine) {
-      return res.status(400).json({ error: 'Machine with this serial number already exists' });
-    }
-
-    // Check if MID/TID combination already exists
-    const existingMidTid = await Machine.findByMidTid(mid, tid);
-    if (existingMidTid) {
-      return res.status(400).json({ error: 'Machine with this MID/TID combination already exists' });
-    }
-
-    const machineData = {
-      serialNumber,
-      mid,
-      tid,
-      type,
-      model: model || null,
-      manufacturer: manufacturer || null
-    };
-
-    const machine = await Machine.create(machineData);
-
-    res.status(201).json({
-      message: 'Machine created successfully',
-      machine
-    });
-
-  } catch (error) {
-    console.error('Create machine error:', error);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
 
 // @route   GET /api/machines
 // @desc    Get all machines with filters
-// @access  Private
-router.get('/', authenticateToken, async (req, res) => {
+// @access  Public
+router.get('/', (req, res) => {
   try {
-    const filters = {
-      status: req.query.status,
-      type: req.query.type,
-      manufacturer: req.query.manufacturer,
-      search: req.query.search
+    const { status, type, manufacturer, partnerType, search } = req.query;
+    
+    let filteredMachines = [...demoMachines];
+    
+    // Apply filters
+    if (status && status !== 'all') {
+      filteredMachines = filteredMachines.filter(machine => machine.status === status);
+    }
+    
+    if (type && type !== 'all') {
+      filteredMachines = filteredMachines.filter(machine => machine.type === type);
+    }
+    
+    if (manufacturer && manufacturer !== 'all') {
+      filteredMachines = filteredMachines.filter(machine => machine.manufacturer === manufacturer);
+    }
+    
+    if (partnerType && partnerType !== 'all') {
+      filteredMachines = filteredMachines.filter(machine => machine.partnerType === partnerType);
+    }
+    
+    if (search) {
+      const searchLower = search.toLowerCase();
+      filteredMachines = filteredMachines.filter(machine =>
+        machine.serialNumber.toLowerCase().includes(searchLower) ||
+        machine.mid.toLowerCase().includes(searchLower) ||
+        machine.tid.toLowerCase().includes(searchLower) ||
+        machine.model.toLowerCase().includes(searchLower) ||
+        machine.partner.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    // Get statistics
+    const stats = {
+      total: demoMachines.length,
+      pos: demoMachines.filter(m => m.type === 'POS').length,
+      soundbox: demoMachines.filter(m => m.type === 'SOUNDBOX').length,
+      available: demoMachines.filter(m => m.status === 'AVAILABLE').length,
+      assigned: demoMachines.filter(m => m.status === 'ASSIGNED').length,
+      maintenance: demoMachines.filter(m => m.status === 'MAINTENANCE').length,
+      b2b: demoMachines.filter(m => m.partnerType === 'B2B').length,
+      b2c: demoMachines.filter(m => m.partnerType === 'B2C').length
     };
-
-    const machines = await Machine.findAll(filters);
-
+    
     res.json({
-      count: machines.length,
-      machines
+      machines: filteredMachines,
+      stats,
+      total: filteredMachines.length
     });
-
+    
   } catch (error) {
     console.error('Get machines error:', error);
     res.status(500).json({ error: 'Server error' });
@@ -122,77 +108,88 @@ router.get('/', authenticateToken, async (req, res) => {
 
 // @route   GET /api/machines/:id
 // @desc    Get machine by ID
-// @access  Private
-router.get('/:id', authenticateToken, async (req, res) => {
+// @access  Public
+router.get('/:id', (req, res) => {
   try {
-    const machine = await Machine.findById(req.params.id);
-
+    const machine = demoMachines.find(m => m.id === req.params.id);
+    
     if (!machine) {
       return res.status(404).json({ error: 'Machine not found' });
     }
-
-    // Get assignment history for this machine
-    const assignmentHistory = await Assignment.getAssignmentHistory(req.params.id);
-
-    res.json({
-      machine,
-      assignmentHistory
-    });
-
+    
+    res.json(machine);
+    
   } catch (error) {
     console.error('Get machine error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
+// @route   POST /api/machines
+// @desc    Create a new machine
+// @access  Public
+router.post('/', (req, res) => {
+  try {
+    const { serialNumber, mid, tid, type, model, manufacturer, partnerType, partner } = req.body;
+    
+    // Validate required fields
+    if (!serialNumber || !mid || !tid || !type || !model || !manufacturer) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+    
+    // Check if machine with same serial number already exists
+    const existingMachine = demoMachines.find(m => m.serialNumber === serialNumber);
+    if (existingMachine) {
+      return res.status(400).json({ error: 'Machine with this serial number already exists' });
+    }
+    
+    const newMachine = {
+      id: (demoMachines.length + 1).toString(),
+      serialNumber,
+      mid,
+      tid,
+      type,
+      model,
+      manufacturer,
+      status: 'AVAILABLE',
+      partner: partner || 'B2C',
+      partnerType: partnerType || 'B2C',
+      qrCode: type === 'SOUNDBOX' ? `QR_${serialNumber}` : null,
+      hasStandee: type === 'SOUNDBOX' ? Math.random() > 0.5 : false
+    };
+    
+    demoMachines.push(newMachine);
+    
+    res.status(201).json({
+      message: 'Machine created successfully',
+      machine: newMachine
+    });
+    
+  } catch (error) {
+    console.error('Create machine error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // @route   PUT /api/machines/:id
 // @desc    Update machine
-// @access  Private (Admin only)
-router.put('/:id', authenticateToken, updateMachineValidation, async (req, res) => {
+// @access  Public
+router.put('/:id', (req, res) => {
   try {
-    // Check if user is admin
-    if (req.user.userType !== 'admin') {
-      return res.status(403).json({ error: 'Access denied. Admin only.' });
-    }
-
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
-    const machine = await Machine.findById(req.params.id);
-    if (!machine) {
+    const machineIndex = demoMachines.findIndex(m => m.id === req.params.id);
+    
+    if (machineIndex === -1) {
       return res.status(404).json({ error: 'Machine not found' });
     }
-
-    const updateData = { ...req.body };
-
-    // If updating serial number, check for duplicates
-    if (updateData.serialNumber && updateData.serialNumber !== machine.serialNumber) {
-      const existingMachine = await Machine.findBySerialNumber(updateData.serialNumber);
-      if (existingMachine) {
-        return res.status(400).json({ error: 'Machine with this serial number already exists' });
-      }
-    }
-
-    // If updating MID/TID, check for duplicates
-    if ((updateData.mid && updateData.mid !== machine.mid) || 
-        (updateData.tid && updateData.tid !== machine.tid)) {
-      const newMid = updateData.mid || machine.mid;
-      const newTid = updateData.tid || machine.tid;
-      const existingMidTid = await Machine.findByMidTid(newMid, newTid);
-      if (existingMidTid && existingMidTid.id !== machine.id) {
-        return res.status(400).json({ error: 'Machine with this MID/TID combination already exists' });
-      }
-    }
-
-    const updatedMachine = await machine.update(updateData);
-
+    
+    const updatedMachine = { ...demoMachines[machineIndex], ...req.body };
+    demoMachines[machineIndex] = updatedMachine;
+    
     res.json({
       message: 'Machine updated successfully',
       machine: updatedMachine
     });
-
+    
   } catch (error) {
     console.error('Update machine error:', error);
     res.status(500).json({ error: 'Server error' });
@@ -201,157 +198,56 @@ router.put('/:id', authenticateToken, updateMachineValidation, async (req, res) 
 
 // @route   DELETE /api/machines/:id
 // @desc    Delete machine
-// @access  Private (Admin only)
-router.delete('/:id', authenticateToken, async (req, res) => {
+// @access  Public
+router.delete('/:id', (req, res) => {
   try {
-    // Check if user is admin
-    if (req.user.userType !== 'admin') {
-      return res.status(403).json({ error: 'Access denied. Admin only.' });
-    }
-
-    const machine = await Machine.findById(req.params.id);
-    if (!machine) {
+    const machineIndex = demoMachines.findIndex(m => m.id === req.params.id);
+    
+    if (machineIndex === -1) {
       return res.status(404).json({ error: 'Machine not found' });
     }
-
-    // Check if machine is currently assigned
-    const activeAssignment = await Assignment.findActiveByMachineId(req.params.id);
-    if (activeAssignment) {
-      return res.status(400).json({ 
-        error: 'Cannot delete machine that is currently assigned. Please return it first.' 
-      });
-    }
-
-    await machine.delete();
-
-    res.json({ message: 'Machine deleted successfully' });
-
+    
+    const deletedMachine = demoMachines.splice(machineIndex, 1)[0];
+    
+    res.json({
+      message: 'Machine deleted successfully',
+      machine: deletedMachine
+    });
+    
   } catch (error) {
     console.error('Delete machine error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
-// @route   GET /api/machines/:id/assignments
-// @desc    Get assignment history for a machine
-// @access  Private
-router.get('/:id/assignments', authenticateToken, async (req, res) => {
+// @route   GET /api/machines/stats/partners
+// @desc    Get partner statistics
+// @access  Public
+router.get('/stats/partners', (req, res) => {
   try {
-    const machine = await Machine.findById(req.params.id);
-    if (!machine) {
-      return res.status(404).json({ error: 'Machine not found' });
-    }
-
-    const assignmentHistory = await Assignment.getAssignmentHistory(req.params.id);
-
-    res.json({
-      machine,
-      assignmentHistory
-    });
-
-  } catch (error) {
-    console.error('Get machine assignments error:', error);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-// @route   GET /api/machines/available
-// @desc    Get all available machines
-// @access  Private
-router.get('/available', authenticateToken, async (req, res) => {
-  try {
-    const machines = await Machine.findAll({ status: 'AVAILABLE' });
-
-    res.json({
-      count: machines.length,
-      machines
-    });
-
-  } catch (error) {
-    console.error('Get available machines error:', error);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-// @route   GET /api/machines/search/:query
-// @desc    Search machines by serial number, MID, or TID
-// @access  Private
-router.get('/search/:query', authenticateToken, async (req, res) => {
-  try {
-    const { query } = req.params;
-    const machines = await Machine.findAll({ search: query });
-
-    res.json({
-      count: machines.length,
-      machines
-    });
-
-  } catch (error) {
-    console.error('Search machines error:', error);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-// @route   POST /api/machines/bulk-import
-// @desc    Import multiple machines from CSV/Excel
-// @access  Private (Admin only)
-router.post('/bulk-import', authenticateToken, async (req, res) => {
-  try {
-    // Check if user is admin
-    if (req.user.userType !== 'admin') {
-      return res.status(403).json({ error: 'Access denied. Admin only.' });
-    }
-
-    const { machines } = req.body;
-
-    if (!Array.isArray(machines) || machines.length === 0) {
-      return res.status(400).json({ error: 'Invalid machines data' });
-    }
-
-    const results = {
-      success: [],
-      errors: []
-    };
-
-    for (const machineData of machines) {
-      try {
-        // Validate required fields
-        if (!machineData.serialNumber || !machineData.mid || !machineData.tid || !machineData.type) {
-          results.errors.push({
-            serialNumber: machineData.serialNumber,
-            error: 'Missing required fields'
-          });
-          continue;
-        }
-
-        // Check for duplicates
-        const existingMachine = await Machine.findBySerialNumber(machineData.serialNumber);
-        if (existingMachine) {
-          results.errors.push({
-            serialNumber: machineData.serialNumber,
-            error: 'Serial number already exists'
-          });
-          continue;
-        }
-
-        const machine = await Machine.create(machineData);
-        results.success.push(machine);
-
-      } catch (error) {
-        results.errors.push({
-          serialNumber: machineData.serialNumber,
-          error: error.message
-        });
+    const partnerStats = {};
+    
+    demoMachines.forEach(machine => {
+      if (!partnerStats[machine.partner]) {
+        partnerStats[machine.partner] = {
+          total: 0,
+          pos: 0,
+          soundbox: 0,
+          available: 0,
+          assigned: 0,
+          maintenance: 0
+        };
       }
-    }
-
-    res.json({
-      message: `Import completed. ${results.success.length} successful, ${results.errors.length} errors.`,
-      results
+      
+      partnerStats[machine.partner].total++;
+      partnerStats[machine.partner][machine.type.toLowerCase()]++;
+      partnerStats[machine.partner][machine.status.toLowerCase()]++;
     });
-
+    
+    res.json(partnerStats);
+    
   } catch (error) {
-    console.error('Bulk import error:', error);
+    console.error('Get partner stats error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
