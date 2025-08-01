@@ -20,10 +20,8 @@ import toast from 'react-hot-toast';
 const Distributors = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [selectedDistributor, setSelectedDistributor] = useState(null);
 
-  const { data, isLoading, error, refetch } = useQuery(
+  const { data, isLoading, error } = useQuery(
     ['distributors', statusFilter],
     () => distributorsAPI.getAll({
       status: statusFilter === 'all' ? undefined : statusFilter
@@ -85,7 +83,6 @@ const Distributors = () => {
           </p>
         </div>
         <button
-          onClick={() => setShowAddModal(true)}
           className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
         >
           <PlusIcon className="h-4 w-4 mr-2" />
@@ -259,13 +256,7 @@ const Distributors = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button
-                        onClick={() => {
-                          setSelectedDistributor(distributor);
-                          setShowAddModal(true);
-                        }}
-                        className="text-blue-600 hover:text-blue-900 font-medium"
-                      >
+                      <button className="text-blue-600 hover:text-blue-900 font-medium">
                         <EyeIcon className="h-4 w-4" />
                       </button>
                     </td>

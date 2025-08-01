@@ -10,7 +10,6 @@ import {
   EyeIcon,
   EyeSlashIcon,
   CheckCircleIcon,
-  ExclamationTriangleIcon,
   ArrowRightOnRectangleIcon,
   MapPinIcon,
   CalendarIcon,

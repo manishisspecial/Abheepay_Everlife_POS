@@ -9,7 +9,6 @@ import Inventory from './pages/Inventory';
 import OrderBooking from './pages/OrderBooking';
 import Orders from './pages/Orders';
 import Machines from './pages/Machines';
-import Assignments from './pages/Assignments';
 import Distributors from './pages/Distributors';
 import Retailers from './pages/Retailers';
 import Reports from './pages/Reports';
@@ -42,7 +41,6 @@ function App() {
         <Route path="/order/:providerId" element={<OrderBooking />} />
         <Route path="/orders" element={<Orders />} />
         <Route path="/machines" element={<Machines />} />
-        <Route path="/assignments" element={<Assignments />} />
         <Route path="/distributors" element={<Distributors />} />
         <Route path="/retailers" element={<Retailers />} />
         <Route path="/reports" element={<Reports />} />

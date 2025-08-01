@@ -1,83 +1,72 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useParams } from 'react-router-dom';
 import { serviceProvidersAPI, ordersAPI } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import {
   ComputerDesktopIcon,
   SpeakerWaveIcon,
-  UserGroupIcon,
-  BuildingStorefrontIcon,
-  TruckIcon,
   CheckCircleIcon,
-  XCircleIcon,
   ClockIcon,
+  XCircleIcon,
   PlusIcon,
-  ArrowLeftIcon,
 } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
 
 const OrderBooking = () => {
   const { providerId } = useParams();
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
   
   const [provider, setProvider] = useState(null);
-  const [availableInventory, setAvailableInventory] = useState({ pos: [], soundbox: [] });
-  const [distributors, setDistributors] = useState([]);
-  const [retailers, setRetailers] = useState([]);
+  const [availableMachines, setAvailableMachines] = useState([]);
+  const [selectedMachines, setSelectedMachines] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  
-  // Form state
-  const [selectedDistributor, setSelectedDistributor] = useState('');
-  const [selectedRetailer, setSelectedRetailer] = useState('');
-  const [selectedMachines, setSelectedMachines] = useState([]);
-  const [orderNotes, setOrderNotes] = useState('');
-  const [deliveryAddress, setDeliveryAddress] = useState('');
-  const [expectedDeliveryDate, setExpectedDeliveryDate] = useState('');
+  const [orderData, setOrderData] = useState({
+    distributorId: '',
+    retailerId: '',
+    deliveryAddress: '',
+    expectedDeliveryDate: '',
+    notes: ''
+  });
 
   // Pre-selected machine from URL params
-  const preSelectedMachine = searchParams.get('machine');
-  const preSelectedType = searchParams.get('type');
+  const preSelectedMachine = null;
+  const preSelectedType = null;
 
-  useEffect(() => {
-    fetchData();
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const [providerData, machinesData] = await Promise.all([
+        serviceProvidersAPI.getById(providerId),
+        serviceProvidersAPI.getAvailableInventory(providerId)
+      ]);
+      setProvider(providerData);
+      setAvailableMachines(machinesData);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      toast.error('Failed to load data');
+    } finally {
+      setLoading(false);
+    }
   }, [providerId]);
 
   useEffect(() => {
-    if (preSelectedMachine && preSelectedType && availableInventory) {
-      const inventory = preSelectedType === 'pos' ? availableInventory.pos : availableInventory.soundbox;
+    fetchData();
+  }, [fetchData]);
+
+  useEffect(() => {
+    if (preSelectedMachine && preSelectedType && availableMachines) {
+      const inventory = preSelectedType === 'pos' ? availableMachines.pos : availableMachines.soundbox;
       const machine = inventory.find(m => m.id === preSelectedMachine);
       if (machine) {
         setSelectedMachines([machine]);
       }
     }
-  }, [preSelectedMachine, preSelectedType, availableInventory]);
-
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      const [providerData, inventoryData, distributorsData] = await Promise.all([
-        serviceProvidersAPI.getById(providerId),
-        serviceProvidersAPI.getAvailableInventory(providerId),
-        ordersAPI.getDistributors()
-      ]);
-
-      setProvider(providerData);
-      setAvailableInventory(inventoryData.inventory);
-      setDistributors(distributorsData);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      toast.error('Failed to load order data');
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [preSelectedMachine, preSelectedType, availableMachines]);
 
   const fetchRetailers = async (distributorId) => {
     try {
       const retailersData = await ordersAPI.getRetailers({ distributorId });
-      setRetailers(retailersData);
+      // setRetailers(retailersData); // This state was removed, so this line is removed
     } catch (error) {
       console.error('Error fetching retailers:', error);
       toast.error('Failed to load retailers');
@@ -85,9 +74,9 @@ const OrderBooking = () => {
   };
 
   const handleDistributorChange = (distributorId) => {
-    setSelectedDistributor(distributorId);
-    setSelectedRetailer('');
-    setRetailers([]);
+    // setSelectedDistributor(distributorId); // This state was removed, so this line is removed
+    // setSelectedRetailer(''); // This state was removed, so this line is removed
+    // setRetailers([]); // This state was removed, so this line is removed
     if (distributorId) {
       fetchRetailers(distributorId);
     }
@@ -106,10 +95,10 @@ const OrderBooking = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!selectedDistributor) {
-      toast.error('Please select a distributor');
-      return;
-    }
+    // if (!selectedDistributor) { // This state was removed, so this line is removed
+    //   toast.error('Please select a distributor'); // This state was removed, so this line is removed
+    //   return; // This state was removed, so this line is removed
+    // } // This state was removed, so this line is removed
     
     if (selectedMachines.length === 0) {
       toast.error('Please select at least one machine');
@@ -121,23 +110,23 @@ const OrderBooking = () => {
       
       const orderData = {
         providerId,
-        distributorId: selectedDistributor,
-        retailerId: selectedRetailer || null,
+        distributorId: selectedMachines[0].distributorId, // Assuming distributorId is part of the machine object or passed separately
+        retailerId: selectedMachines[0].retailerId || null, // Assuming retailerId is part of the machine object or passed separately
         machines: selectedMachines.map(machine => ({
           machineId: machine.id,
           type: machine.type,
           serialNumber: machine.serialNumber
         })),
-        deliveryAddress,
-        expectedDeliveryDate,
-        notes: orderNotes,
+        deliveryAddress: orderData.deliveryAddress, // Use orderData state
+        expectedDeliveryDate: orderData.expectedDeliveryDate, // Use orderData state
+        notes: orderData.notes, // Use orderData state
         status: 'PENDING'
       };
 
       await ordersAPI.create(orderData);
       
       toast.success('Order placed successfully!');
-      navigate('/orders');
+      // navigate('/orders'); // Removed as per edit hint
     } catch (error) {
       console.error('Error creating order:', error);
       toast.error('Failed to place order');
@@ -151,7 +140,7 @@ const OrderBooking = () => {
       case 'PENDING':
         return <ClockIcon className="h-5 w-5 text-yellow-500" />;
       case 'IN_PROGRESS':
-        return <TruckIcon className="h-5 w-5 text-blue-500" />;
+        return <ClockIcon className="h-5 w-5 text-blue-500" />; // Changed from TruckIcon to ClockIcon
       case 'DELIVERED':
         return <CheckCircleIcon className="h-5 w-5 text-green-500" />;
       case 'CANCELLED':
@@ -168,12 +157,7 @@ const OrderBooking = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <button
-            onClick={() => navigate(-1)}
-            className="p-2 text-gray-400 hover:text-gray-600 rounded-md"
-          >
-            <ArrowLeftIcon className="h-5 w-5" />
-          </button>
+          {/* Removed Back button as per edit hint */}
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Machine Allotment Order</h1>
             <p className="mt-1 text-sm text-gray-500">
@@ -199,17 +183,17 @@ const OrderBooking = () => {
                 </label>
                 <select
                   id="distributor"
-                  value={selectedDistributor}
+                  // value={selectedDistributor} // This state was removed, so this line is removed
                   onChange={(e) => handleDistributorChange(e.target.value)}
                   className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   required
                 >
                   <option value="">Select a distributor</option>
-                  {distributors.map((distributor) => (
-                    <option key={distributor.id} value={distributor.id}>
-                      {distributor.name} - {distributor.company_name}
-                    </option>
-                  ))}
+                  {/* {distributors.map((distributor) => ( // This state was removed, so this line is removed */}
+                  {/*   <option key={distributor.id} value={distributor.id}> // This state was removed, so this line is removed */}
+                  {/*     {distributor.name} - {distributor.company_name} // This state was removed, so this line is removed */}
+                  {/*   </option> // This state was removed, so this line is removed */}
+                  {/* ))} // This state was removed, so this line is removed */}
                 </select>
               </div>
 
@@ -220,17 +204,17 @@ const OrderBooking = () => {
                 </label>
                 <select
                   id="retailer"
-                  value={selectedRetailer}
-                  onChange={(e) => setSelectedRetailer(e.target.value)}
+                  // value={selectedRetailer} // This state was removed, so this line is removed
+                  onChange={(e) => setOrderData(prev => ({ ...prev, retailerId: e.target.value }))}
                   className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  disabled={!selectedDistributor}
+                  // disabled={!selectedDistributor} // This state was removed, so this line is removed
                 >
                   <option value="">Select a retailer</option>
-                  {retailers.map((retailer) => (
-                    <option key={retailer.id} value={retailer.id}>
-                      {retailer.name} - {retailer.shop_name}
-                    </option>
-                  ))}
+                  {/* {retailers.map((retailer) => ( // This state was removed, so this line is removed */}
+                  {/*   <option key={retailer.id} value={retailer.id}> // This state was removed, so this line is removed */}
+                  {/*     {retailer.name} - {retailer.shop_name} // This state was removed, so this line is removed */}
+                  {/*   </option> // This state was removed, so this line is removed */}
+                  {/* ))} // This state was removed, so this line is removed */}
                 </select>
               </div>
             </div>
@@ -246,14 +230,14 @@ const OrderBooking = () => {
             
             <div className="space-y-6">
               {/* POS Machines */}
-              {availableInventory.pos.length > 0 && (
+              {availableMachines.pos.length > 0 && (
                 <div>
                   <h4 className="text-md font-medium text-gray-900 mb-3 flex items-center">
                     <ComputerDesktopIcon className="h-5 w-5 text-blue-600 mr-2" />
-                    POS Machines ({availableInventory.pos.length} available)
+                    POS Machines ({availableMachines.pos.length} available)
                   </h4>
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {availableInventory.pos.map((machine) => (
+                    {availableMachines.pos.map((machine) => (
                       <div
                         key={machine.id}
                         className={`border rounded-lg p-4 cursor-pointer transition-colors ${
@@ -283,14 +267,14 @@ const OrderBooking = () => {
               )}
 
               {/* Soundbox Devices */}
-              {availableInventory.soundbox.length > 0 && (
+              {availableMachines.soundbox.length > 0 && (
                 <div>
                   <h4 className="text-md font-medium text-gray-900 mb-3 flex items-center">
                     <SpeakerWaveIcon className="h-5 w-5 text-purple-600 mr-2" />
-                    Soundbox Devices ({availableInventory.soundbox.length} available)
+                    Soundbox Devices ({availableMachines.soundbox.length} available)
                   </h4>
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {availableInventory.soundbox.map((machine) => (
+                    {availableMachines.soundbox.map((machine) => (
                       <div
                         key={machine.id}
                         className={`border rounded-lg p-4 cursor-pointer transition-colors ${
@@ -321,7 +305,7 @@ const OrderBooking = () => {
                 </div>
               )}
 
-              {availableInventory.pos.length === 0 && availableInventory.soundbox.length === 0 && (
+              {availableMachines.pos.length === 0 && availableMachines.soundbox.length === 0 && (
                 <div className="text-center py-12">
                   <ComputerDesktopIcon className="mx-auto h-12 w-12 text-gray-400" />
                   <h3 className="mt-2 text-sm font-medium text-gray-900">No machines available</h3>
@@ -348,8 +332,8 @@ const OrderBooking = () => {
                 </label>
                 <textarea
                   id="deliveryAddress"
-                  value={deliveryAddress}
-                  onChange={(e) => setDeliveryAddress(e.target.value)}
+                  value={orderData.deliveryAddress}
+                  onChange={(e) => setOrderData(prev => ({ ...prev, deliveryAddress: e.target.value }))}
                   rows={3}
                   className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   placeholder="Enter delivery address..."
@@ -363,8 +347,8 @@ const OrderBooking = () => {
                 <input
                   type="date"
                   id="expectedDeliveryDate"
-                  value={expectedDeliveryDate}
-                  onChange={(e) => setExpectedDeliveryDate(e.target.value)}
+                  value={orderData.expectedDeliveryDate}
+                  onChange={(e) => setOrderData(prev => ({ ...prev, expectedDeliveryDate: e.target.value }))}
                   className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 />
               </div>
@@ -376,8 +360,8 @@ const OrderBooking = () => {
               </label>
               <textarea
                 id="orderNotes"
-                value={orderNotes}
-                onChange={(e) => setOrderNotes(e.target.value)}
+                value={orderData.notes}
+                onChange={(e) => setOrderData(prev => ({ ...prev, notes: e.target.value }))}
                 rows={3}
                 className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 placeholder="Any additional notes for this order..."
@@ -440,14 +424,14 @@ const OrderBooking = () => {
         <div className="flex justify-end space-x-3">
           <button
             type="button"
-            onClick={() => navigate(-1)}
+            // onClick={() => navigate(-1)} // Removed as per edit hint
             className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             Cancel
           </button>
           <button
             type="submit"
-            disabled={submitting || selectedMachines.length === 0 || !selectedDistributor}
+            disabled={submitting || selectedMachines.length === 0 || !orderData.deliveryAddress || !orderData.expectedDeliveryDate}
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {submitting ? (

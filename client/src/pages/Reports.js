@@ -1,18 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { reportsAPI } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import {
-  DocumentChartBarIcon,
-  ComputerDesktopIcon,
-  UserGroupIcon,
+  DocumentTextIcon,
+  ArrowDownTrayIcon,
   BuildingStorefrontIcon,
   ShoppingBagIcon,
-  ArrowDownTrayIcon,
-  CalendarIcon,
-  FunnelIcon,
-  MagnifyingGlassIcon,
+  ComputerDesktopIcon,
 } from '@heroicons/react/24/outline';
-import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 
 const Reports = () => {
@@ -28,7 +23,7 @@ const Reports = () => {
       id: 'assignments',
       name: 'Assignments Report',
       description: 'Machine assignment history and status',
-      icon: DocumentChartBarIcon,
+      icon: DocumentTextIcon,
       color: 'text-blue-600',
       bgColor: 'bg-blue-100'
     },

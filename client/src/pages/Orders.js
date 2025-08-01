@@ -1,19 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from 'react-query';
 import { ordersAPI } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import {
-  ClipboardDocumentListIcon,
-  ClockIcon,
   CheckCircleIcon,
-  TruckIcon,
   XCircleIcon,
-  EyeIcon,
-  PencilIcon,
+  ClockIcon,
   PlusIcon,
-  FunnelIcon,
   MagnifyingGlassIcon,
+  EyeIcon,
+  ChartBarIcon,
 } from '@heroicons/react/24/outline';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
@@ -52,7 +49,7 @@ const Orders = () => {
       case 'APPROVED':
         return <CheckCircleIcon className="h-5 w-5 text-green-500" />;
       case 'IN_PROGRESS':
-        return <TruckIcon className="h-5 w-5 text-blue-500" />;
+        return <ClockIcon className="h-5 w-5 text-blue-500" />;
       case 'DELIVERED':
         return <CheckCircleIcon className="h-5 w-5 text-green-600" />;
       case 'CANCELLED':
@@ -141,7 +138,7 @@ const Orders = () => {
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <ClipboardDocumentListIcon className="h-6 w-6 text-blue-600" />
+                <ChartBarIcon className="h-6 w-6 text-blue-600" />
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
@@ -189,7 +186,7 @@ const Orders = () => {
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <TruckIcon className="h-6 w-6 text-green-600" />
+                <ClockIcon className="h-6 w-6 text-green-600" />
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
@@ -357,7 +354,7 @@ const Orders = () => {
                             }}
                             className="text-blue-600 hover:text-blue-900"
                           >
-                            <PencilIcon className="h-4 w-4" />
+                            <ClockIcon className="h-4 w-4" />
                           </button>
                           <Link
                             to={`/orders/${order.id}`}
@@ -374,7 +371,7 @@ const Orders = () => {
             </div>
           ) : (
             <div className="text-center py-12">
-              <ClipboardDocumentListIcon className="mx-auto h-12 w-12 text-gray-400" />
+              <ChartBarIcon className="mx-auto h-12 w-12 text-gray-400" />
               <h3 className="mt-2 text-sm font-medium text-gray-900">No orders found</h3>
               <p className="mt-1 text-sm text-gray-500">
                 {searchTerm ? 'Try adjusting your search terms.' : 'Get started by creating your first order.'}

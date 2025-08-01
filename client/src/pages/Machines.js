@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useQuery } from 'react-query';
 import { machinesAPI } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -7,16 +7,12 @@ import {
   SpeakerWaveIcon,
   CheckCircleIcon,
   XCircleIcon,
-  ClockIcon,
-  EyeIcon,
+  ExclamationTriangleIcon,
   PlusIcon,
   MagnifyingGlassIcon,
-  FunnelIcon,
-  BuildingStorefrontIcon,
-  UserGroupIcon,
+  EyeIcon,
   QrCodeIcon,
   RectangleStackIcon,
-  ExclamationTriangleIcon,
   ChartBarIcon,
 } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
@@ -27,10 +23,8 @@ const Machines = () => {
   const [typeFilter, setTypeFilter] = useState('all');
   const [manufacturerFilter, setManufacturerFilter] = useState('all');
   const [partnerTypeFilter, setPartnerTypeFilter] = useState('all');
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [selectedMachine, setSelectedMachine] = useState(null);
 
-  const { data, isLoading, error, refetch } = useQuery(
+  const { data, isLoading, error } = useQuery(
     ['machines', statusFilter, typeFilter, manufacturerFilter, partnerTypeFilter],
     () => machinesAPI.getAll({
       status: statusFilter === 'all' ? undefined : statusFilter,
@@ -48,10 +42,9 @@ const Machines = () => {
     const searchLower = searchTerm.toLowerCase();
     return (
       machine.serialNumber.toLowerCase().includes(searchLower) ||
-      machine.mid.toLowerCase().includes(searchLower) ||
-      machine.tid.toLowerCase().includes(searchLower) ||
       machine.model.toLowerCase().includes(searchLower) ||
-      machine.partner.toLowerCase().includes(searchLower)
+      machine.manufacturer.toLowerCase().includes(searchLower) ||
+      machine.partner?.toLowerCase().includes(searchLower)
     );
   }) || [];
 
@@ -60,7 +53,7 @@ const Machines = () => {
       case 'AVAILABLE':
         return <CheckCircleIcon className="h-5 w-5 text-green-500" />;
       case 'ASSIGNED':
-        return <ClockIcon className="h-5 w-5 text-blue-500" />;
+        return <ExclamationTriangleIcon className="h-5 w-5 text-blue-500" />;
       case 'MAINTENANCE':
         return <ExclamationTriangleIcon className="h-5 w-5 text-yellow-500" />;
       default:
@@ -86,7 +79,7 @@ const Machines = () => {
       case 'B2B':
         return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">B2B</span>;
       case 'B2C':
-        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">B2C</span>;
+        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">B2C</span>;
       default:
         return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">Unknown</span>;
     }
@@ -107,11 +100,10 @@ const Machines = () => {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Machines Management</h1>
           <p className="mt-2 text-sm text-gray-600">
-            Manage POS and Soundbox devices with B2B/B2C partner distribution
+            Manage POS machines and Soundbox devices inventory
           </p>
         </div>
         <button
-          onClick={() => setShowAddModal(true)}
           className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
         >
           <PlusIcon className="h-4 w-4 mr-2" />
@@ -126,7 +118,7 @@ const Machines = () => {
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-                  <ComputerDesktopIcon className="h-5 w-5 text-white" />
+                  <ChartBarIcon className="h-5 w-5 text-white" />
                 </div>
               </div>
               <div className="ml-4 w-0 flex-1">
@@ -144,6 +136,42 @@ const Machines = () => {
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-green-600 rounded-lg flex items-center justify-center">
+                  <ComputerDesktopIcon className="h-5 w-5 text-white" />
+                </div>
+              </div>
+              <div className="ml-4 w-0 flex-1">
+                <dl>
+                  <dt className="text-sm font-medium text-gray-500 truncate">POS Machines</dt>
+                  <dd className="text-2xl font-bold text-gray-900">{stats.pos}</dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white overflow-hidden shadow-lg rounded-xl border border-gray-100">
+          <div className="p-6">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
+                  <SpeakerWaveIcon className="h-5 w-5 text-white" />
+                </div>
+              </div>
+              <div className="ml-4 w-0 flex-1">
+                <dl>
+                  <dt className="text-sm font-medium text-gray-500 truncate">Soundbox Devices</dt>
+                  <dd className="text-2xl font-bold text-gray-900">{stats.soundbox}</dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white overflow-hidden shadow-lg rounded-xl border border-gray-100">
+          <div className="p-6">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center">
                   <CheckCircleIcon className="h-5 w-5 text-white" />
                 </div>
               </div>
@@ -156,13 +184,34 @@ const Machines = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Detailed Stats */}
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+        <div className="bg-white overflow-hidden shadow-lg rounded-xl border border-gray-100">
+          <div className="p-6">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                  <ExclamationTriangleIcon className="h-5 w-5 text-white" />
+                </div>
+              </div>
+              <div className="ml-4 w-0 flex-1">
+                <dl>
+                  <dt className="text-sm font-medium text-gray-500 truncate">Assigned</dt>
+                  <dd className="text-2xl font-bold text-gray-900">{stats.assigned}</dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <div className="bg-white overflow-hidden shadow-lg rounded-xl border border-gray-100">
           <div className="p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
-                  <BuildingStorefrontIcon className="h-5 w-5 text-white" />
+                  <span className="text-white font-bold text-sm">B2B</span>
                 </div>
               </div>
               <div className="ml-4 w-0 flex-1">
@@ -179,8 +228,8 @@ const Machines = () => {
           <div className="p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
-                  <UserGroupIcon className="h-5 w-5 text-white" />
+                <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">B2C</span>
                 </div>
               </div>
               <div className="ml-4 w-0 flex-1">
@@ -189,45 +238,6 @@ const Machines = () => {
                   <dd className="text-2xl font-bold text-gray-900">{stats.b2c}</dd>
                 </dl>
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Detailed Stats */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
-        <div className="bg-white overflow-hidden shadow-lg rounded-xl border border-gray-100">
-          <div className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-500">POS Machines</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.pos}</p>
-              </div>
-              <ComputerDesktopIcon className="h-8 w-8 text-blue-500" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white overflow-hidden shadow-lg rounded-xl border border-gray-100">
-          <div className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-500">Soundbox Devices</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.soundbox}</p>
-              </div>
-              <SpeakerWaveIcon className="h-8 w-8 text-purple-500" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white overflow-hidden shadow-lg rounded-xl border border-gray-100">
-          <div className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-500">Assigned</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.assigned}</p>
-              </div>
-              <ClockIcon className="h-8 w-8 text-blue-500" />
             </div>
           </div>
         </div>
@@ -247,7 +257,7 @@ const Machines = () => {
                   id="search"
                   name="search"
                   className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                  placeholder="Search by serial number, MID, TID, model, or partner..."
+                  placeholder="Search by serial number, model, manufacturer, or QR code..."
                   type="search"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -292,9 +302,9 @@ const Machines = () => {
                 onChange={(e) => setPartnerTypeFilter(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="all">All Partners</option>
-                <option value="B2B">B2B Partners</option>
-                <option value="B2C">B2C Available</option>
+                <option value="all">All Partner Types</option>
+                <option value="B2B">B2B</option>
+                <option value="B2C">B2C</option>
               </select>
             </div>
           </div>
@@ -319,16 +329,13 @@ const Machines = () => {
                     Device Info
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    MID/TID
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Model & Partner
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
+                    Partner Type
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Partner Type
+                    Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
@@ -353,30 +360,30 @@ const Machines = () => {
                         </div>
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900">{machine.serialNumber}</div>
-                          <div className="text-sm text-gray-500">ID: {machine.id}</div>
+                          <div className="text-sm text-gray-500">{machine.manufacturer}</div>
+                          {machine.mid && <div className="text-xs text-gray-400">MID: {machine.mid}</div>}
+                          {machine.tid && <div className="text-xs text-gray-400">TID: {machine.tid}</div>}
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">MID: {machine.mid}</div>
-                      <div className="text-sm text-gray-500">TID: {machine.tid}</div>
+                      <div className="text-sm font-medium text-gray-900">{machine.model}</div>
+                      {machine.partner && <div className="text-sm text-gray-500">Partner: {machine.partner}</div>}
+                      {machine.qrCode && (
+                        <div className="flex items-center text-xs text-gray-400 mt-1">
+                          <QrCodeIcon className="h-3 w-3 mr-1" />
+                          QR: {machine.qrCode}
+                        </div>
+                      )}
+                      {machine.hasStandee !== undefined && (
+                        <div className="flex items-center text-xs text-gray-400 mt-1">
+                          <RectangleStackIcon className="h-3 w-3 mr-1" />
+                          {machine.hasStandee ? 'With Standee' : 'No Standee'}
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{machine.model}</div>
-                      <div className="text-sm text-gray-500">{machine.manufacturer}</div>
-                      <div className="text-sm text-gray-500">Partner: {machine.partner}</div>
-                      {machine.qrCode && (
-                        <div className="flex items-center text-sm text-gray-500 mt-1">
-                          <QrCodeIcon className="h-4 w-4 mr-1" />
-                          {machine.qrCode}
-                        </div>
-                      )}
-                      {machine.hasStandee && (
-                        <div className="flex items-center text-sm text-gray-500 mt-1">
-                          <RectangleStackIcon className="h-4 w-4 mr-1" />
-                          With Standee
-                        </div>
-                      )}
+                      {getPartnerTypeBadge(machine.partnerType)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
@@ -384,17 +391,8 @@ const Machines = () => {
                         <span className="ml-2">{getStatusBadge(machine.status)}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {getPartnerTypeBadge(machine.partnerType)}
-                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button
-                        onClick={() => {
-                          setSelectedMachine(machine);
-                          setShowAddModal(true);
-                        }}
-                        className="text-blue-600 hover:text-blue-900 font-medium"
-                      >
+                      <button className="text-blue-600 hover:text-blue-900 font-medium">
                         <EyeIcon className="h-4 w-4" />
                       </button>
                     </td>

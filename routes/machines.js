@@ -4,46 +4,8 @@ const Machine = require('../models/Machine');
 
 const router = express.Router();
 
-// Demo machines data with B2B/B2C partners
-const demoMachines = [
-  // Telering B2B Partners - POS Machines
-  { id: '1', serialNumber: 'TLR-IM191-001', mid: 'MID191001', tid: 'TID191001', type: 'POS', model: 'Instant Mudra-191', manufacturer: 'Telering', status: 'ASSIGNED', partner: 'Instant Mudra', partnerType: 'B2B' },
-  { id: '2', serialNumber: 'TLR-IM191-002', mid: 'MID191002', tid: 'TID191002', type: 'POS', model: 'Instant Mudra-191', manufacturer: 'Telering', status: 'ASSIGNED', partner: 'Instant Mudra', partnerType: 'B2B' },
-  { id: '3', serialNumber: 'TLR-DH6-001', mid: 'MID6001', tid: 'TID6001', type: 'POS', model: 'Dhamillion-6', manufacturer: 'Telering', status: 'ASSIGNED', partner: 'Dhamillion', partnerType: 'B2B' },
-  { id: '4', serialNumber: 'TLR-QP10-001', mid: 'MID10001', tid: 'TID10001', type: 'POS', model: 'Quickpay-10', manufacturer: 'Telering', status: 'ASSIGNED', partner: 'Quickpay', partnerType: 'B2B' },
-  { id: '5', serialNumber: 'TLR-PM10-001', mid: 'MID10P001', tid: 'TID10P001', type: 'POS', model: 'Paymatrix-10', manufacturer: 'Telering', status: 'ASSIGNED', partner: 'Paymatrix', partnerType: 'B2B' },
-  { id: '6', serialNumber: 'TLR-DMC28-001', mid: 'MID28D001', tid: 'TID28D001', type: 'POS', model: 'DMCPAY-28', manufacturer: 'Telering', status: 'ASSIGNED', partner: 'DMCPAY', partnerType: 'B2B' },
-  { id: '7', serialNumber: 'TLR-RM11-001', mid: 'MID11R001', tid: 'TID11R001', type: 'POS', model: 'Raju Mobile-11', manufacturer: 'Telering', status: 'ASSIGNED', partner: 'Raju Mobile', partnerType: 'B2B' },
-  
-  // Telering B2B Partners - Soundbox (100 QR)
-  { id: '8', serialNumber: 'TLR-SB-B2B-001', mid: 'MIDSB001', tid: 'TIDSB001', type: 'SOUNDBOX', model: 'Telering-1000', manufacturer: 'Telering', status: 'ASSIGNED', partner: 'Instant Mudra', partnerType: 'B2B', qrCode: 'QR_TLR_B2B_001', hasStandee: true },
-  { id: '9', serialNumber: 'TLR-SB-B2B-002', mid: 'MIDSB002', tid: 'TIDSB002', type: 'SOUNDBOX', model: 'Telering-1000', manufacturer: 'Telering', status: 'ASSIGNED', partner: 'Dhamillion', partnerType: 'B2B', qrCode: 'QR_TLR_B2B_002', hasStandee: true },
-  { id: '10', serialNumber: 'TLR-SB-B2B-003', mid: 'MIDSB003', tid: 'TIDSB003', type: 'SOUNDBOX', model: 'Telering-1000', manufacturer: 'Telering', status: 'ASSIGNED', partner: 'Quickpay', partnerType: 'B2B', qrCode: 'QR_TLR_B2B_003', hasStandee: true },
-  
-  // Telering B2C Available - POS Machines
-  { id: '11', serialNumber: 'TLR-B2C-001', mid: 'MIDB2C001', tid: 'TIDB2C001', type: 'POS', model: 'Telering-390', manufacturer: 'Telering', status: 'AVAILABLE', partner: 'B2C', partnerType: 'B2C' },
-  { id: '12', serialNumber: 'TLR-B2C-002', mid: 'MIDB2C002', tid: 'TIDB2C002', type: 'POS', model: 'Telering-390', manufacturer: 'Telering', status: 'AVAILABLE', partner: 'B2C', partnerType: 'B2C' },
-  { id: '13', serialNumber: 'TLR-B2C-003', mid: 'MIDB2C003', tid: 'TIDB2C003', type: 'POS', model: 'Telering-390', manufacturer: 'Telering', status: 'AVAILABLE', partner: 'B2C', partnerType: 'B2C' },
-  
-  // Telering B2C Available - Soundbox
-  { id: '14', serialNumber: 'TLR-SB-B2C-001', mid: 'MIDSBB2C001', tid: 'TIDSBB2C001', type: 'SOUNDBOX', model: 'Telering-1000', manufacturer: 'Telering', status: 'AVAILABLE', partner: 'B2C', partnerType: 'B2C', qrCode: 'QR_TLR_B2C_001', hasStandee: true },
-  { id: '15', serialNumber: 'TLR-SB-B2C-002', mid: 'MIDSBB2C002', tid: 'TIDSBB2C002', type: 'SOUNDBOX', model: 'Telering-1000', manufacturer: 'Telering', status: 'AVAILABLE', partner: 'B2C', partnerType: 'B2C', qrCode: 'QR_TLR_B2C_002', hasStandee: false },
-  
-  // Everlife B2B Partners - POS Machines
-  { id: '16', serialNumber: 'EVL-IM101-001', mid: 'MID101E001', tid: 'TID101E001', type: 'POS', model: 'Instant Mudra-101', manufacturer: 'Everlife', status: 'ASSIGNED', partner: 'Instant Mudra', partnerType: 'B2B' },
-  { id: '17', serialNumber: 'EVL-IM101-002', mid: 'MID101E002', tid: 'TID101E002', type: 'POS', model: 'Instant Mudra-101', manufacturer: 'Everlife', status: 'ASSIGNED', partner: 'Instant Mudra', partnerType: 'B2B' },
-  { id: '18', serialNumber: 'EVL-DMC80-001', mid: 'MID80E001', tid: 'TID80E001', type: 'POS', model: 'DMCPAY-80', manufacturer: 'Everlife', status: 'ASSIGNED', partner: 'DMCPAY', partnerType: 'B2B' },
-  { id: '19', serialNumber: 'EVL-RM40-001', mid: 'MID40E001', tid: 'TID40E001', type: 'POS', model: 'Raju Mobile-40', manufacturer: 'Everlife', status: 'ASSIGNED', partner: 'Raju Mobile', partnerType: 'B2B' },
-  
-  // Everlife B2C Available - POS Machines
-  { id: '20', serialNumber: 'EVL-B2C-001', mid: 'MIDB2CE001', tid: 'TIDB2CE001', type: 'POS', model: 'Everlife-251', manufacturer: 'Everlife', status: 'AVAILABLE', partner: 'B2C', partnerType: 'B2C' },
-  { id: '21', serialNumber: 'EVL-B2C-002', mid: 'MIDB2CE002', tid: 'TIDB2CE002', type: 'POS', model: 'Everlife-251', manufacturer: 'Everlife', status: 'AVAILABLE', partner: 'B2C', partnerType: 'B2C' },
-  { id: '22', serialNumber: 'EVL-B2C-003', mid: 'MIDB2CE003', tid: 'TIDB2CE003', type: 'POS', model: 'Everlife-251', manufacturer: 'Everlife', status: 'AVAILABLE', partner: 'B2C', partnerType: 'B2C' },
-  
-  // Maintenance Machines
-  { id: '23', serialNumber: 'TLR-MAINT-001', mid: 'MIDMAINT001', tid: 'TIDMAINT001', type: 'POS', model: 'Telering-390', manufacturer: 'Telering', status: 'MAINTENANCE', partner: 'B2C', partnerType: 'B2C' },
-  { id: '24', serialNumber: 'EVL-MAINT-001', mid: 'MIDMAINTE001', tid: 'TIDMAINTE001', type: 'SOUNDBOX', model: 'Everlife-251', manufacturer: 'Everlife', status: 'MAINTENANCE', partner: 'B2C', partnerType: 'B2C', qrCode: 'QR_EVL_MAINT_001', hasStandee: false }
-];
+// Import demo data from centralized file
+const { demoMachines } = require('../data/demoData');
 
 // @route   GET /api/machines
 // @desc    Get all machines with filters
@@ -252,4 +214,5 @@ router.get('/stats/partners', (req, res) => {
   }
 });
 
-module.exports = router; 
+module.exports = router;
+module.exports.demoMachines = demoMachines; 

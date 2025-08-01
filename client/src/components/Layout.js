@@ -21,7 +21,6 @@ const navigation = [
   { name: 'Service Providers', href: '/service-providers', icon: CubeIcon },
   { name: 'Orders', href: '/orders', icon: ClipboardDocumentListIcon },
   { name: 'Machines', href: '/machines', icon: ComputerDesktopIcon },
-  { name: 'Assignments', href: '/assignments', icon: UserGroupIcon },
   { name: 'Distributors', href: '/distributors', icon: BuildingStorefrontIcon },
   { name: 'Retailers', href: '/retailers', icon: UserGroupIcon },
   { name: 'Reports', href: '/reports', icon: ChartBarIcon },

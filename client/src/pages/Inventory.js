@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { serviceProvidersAPI } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -13,6 +13,7 @@ import {
   QrCodeIcon,
   RectangleStackIcon,
 } from '@heroicons/react/24/outline';
+import toast from 'react-hot-toast';
 
 const Inventory = () => {
   const { providerId } = useParams();
@@ -23,11 +24,7 @@ const Inventory = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => {
-    fetchInventory();
-  }, [providerId]);
-
-  const fetchInventory = async () => {
+  const fetchInventory = useCallback(async () => {
     try {
       setLoading(true);
       const data = await serviceProvidersAPI.getInventory(providerId);
@@ -39,7 +36,11 @@ const Inventory = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [providerId]);
+
+  useEffect(() => {
+    fetchInventory();
+  }, [fetchInventory]);
 
   const getFilteredInventory = () => {
     if (!inventory) return { pos: [], soundbox: [] };

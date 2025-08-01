@@ -82,38 +82,7 @@ export const machinesAPI = {
     api.get(`/machines/${id}/assignments`).then(res => res.data),
 };
 
-// Assignments API
-export const assignmentsAPI = {
-  getAll: (params) =>
-    api.get('/assignments', { params }).then(res => res.data),
-  
-  getById: (id) =>
-    api.get(`/assignments/${id}`).then(res => res.data),
-  
-  create: (assignmentData) =>
-    api.post('/assignments', assignmentData).then(res => res.data),
-  
-  update: (id, assignmentData) =>
-    api.put(`/assignments/${id}`, assignmentData).then(res => res.data),
-  
-  return: (id) =>
-    api.post(`/assignments/${id}/return`).then(res => res.data),
-  
-  getByMachine: (machineId) =>
-    api.get(`/assignments/machine/${machineId}`).then(res => res.data),
-  
-  getByDistributor: (distributorId) =>
-    api.get(`/assignments/distributor/${distributorId}`).then(res => res.data),
-  
-  getByRetailer: (retailerId) =>
-    api.get(`/assignments/retailer/${retailerId}`).then(res => res.data),
-  
-  getActive: () =>
-    api.get('/assignments/active').then(res => res.data),
-  
-  bulkAssign: (assignments) =>
-    api.post('/assignments/bulk-assign', { assignments }).then(res => res.data),
-};
+
 
 // Distributors API
 export const distributorsAPI = {
