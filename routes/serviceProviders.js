@@ -1,5 +1,5 @@
 const express = require('express');
-const Machine = require('../models/Machine');
+const dbService = require('../services/databaseService');
 const router = express.Router();
 
 // Service Providers Data
@@ -53,7 +53,7 @@ router.get('/:id/inventory', async (req, res) => {
     }
 
     // Get all machines from database
-    const allMachines = await Machine.findAll();
+    const allMachines = await dbService.getAllMachines();
     
     // Filter machines based on provider
     let posMachines = [];
@@ -63,24 +63,21 @@ router.get('/:id/inventory', async (req, res) => {
       // Telering machines: Telering-390 POS and Telering-1000 Soundbox
       posMachines = allMachines.filter(machine => 
         machine.manufacturer === 'Telering' && 
-        machine.model === 'Telering-390' &&
-        machine.type === 'POS'
+        machine.machine_type === 'POS'
       );
       soundboxMachines = allMachines.filter(machine => 
         machine.manufacturer === 'Telering' && 
-        machine.model === 'Telering-1000' &&
-        machine.type === 'SOUNDBOX'
+        machine.machine_type === 'SOUNDBOX'
       );
     } else if (provider.code === 'EVERLIFE') {
       // Everlife machines: Everlife-251 POS
       posMachines = allMachines.filter(machine => 
         machine.manufacturer === 'Everlife' && 
-        machine.model === 'Everlife-251' &&
-        machine.type === 'POS'
+        machine.machine_type === 'POS'
       );
       soundboxMachines = allMachines.filter(machine => 
         machine.manufacturer === 'Everlife' &&
-        machine.type === 'SOUNDBOX'
+        machine.machine_type === 'SOUNDBOX'
       );
     }
 
@@ -134,8 +131,8 @@ router.get('/:id/inventory/available', async (req, res) => {
       return res.status(404).json({ error: 'Service provider not found' });
     }
 
-    // Get all machines from database
-    const allMachines = await Machine.findAll();
+    // Get available machines from database
+    const availableMachines = await dbService.getAvailableMachines();
     
     // Filter machines based on provider
     let posMachines = [];
@@ -143,30 +140,23 @@ router.get('/:id/inventory/available', async (req, res) => {
 
     if (provider.code === 'TELERING') {
       // Telering machines: Telering-390 POS and Telering-1000 Soundbox
-      posMachines = allMachines.filter(machine => 
+      posMachines = availableMachines.filter(machine => 
         machine.manufacturer === 'Telering' && 
-        machine.model === 'Telering-390' &&
-        machine.type === 'POS' &&
-        machine.status === 'AVAILABLE'
+        machine.machine_type === 'POS'
       );
-      soundboxMachines = allMachines.filter(machine => 
+      soundboxMachines = availableMachines.filter(machine => 
         machine.manufacturer === 'Telering' && 
-        machine.model === 'Telering-1000' &&
-        machine.type === 'SOUNDBOX' &&
-        machine.status === 'AVAILABLE'
+        machine.machine_type === 'SOUNDBOX'
       );
     } else if (provider.code === 'EVERLIFE') {
       // Everlife machines: Everlife-251 POS
-      posMachines = allMachines.filter(machine => 
+      posMachines = availableMachines.filter(machine => 
         machine.manufacturer === 'Everlife' && 
-        machine.model === 'Everlife-251' &&
-        machine.type === 'POS' &&
-        machine.status === 'AVAILABLE'
+        machine.machine_type === 'POS'
       );
-      soundboxMachines = allMachines.filter(machine => 
+      soundboxMachines = availableMachines.filter(machine => 
         machine.manufacturer === 'Everlife' &&
-        machine.type === 'SOUNDBOX' &&
-        machine.status === 'AVAILABLE'
+        machine.machine_type === 'SOUNDBOX'
       );
     }
 

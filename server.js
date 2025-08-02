@@ -46,10 +46,14 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/service-providers', require('./routes/serviceProviders'));
 app.use('/api/orders', require('./routes/orders'));
 app.use('/api/machines', require('./routes/machines'));
+app.use('/api/assignments', require('./routes/assignments'));
 app.use('/api/distributors', require('./routes/distributors'));
 app.use('/api/retailers', require('./routes/retailers'));
 app.use('/api/reports', require('./routes/reports'));
 app.use('/api/settlements', require('./routes/settlements'));
+
+// Enhanced routes for new functionality
+app.use('/api', require('./routes/enhancedRoutes'));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

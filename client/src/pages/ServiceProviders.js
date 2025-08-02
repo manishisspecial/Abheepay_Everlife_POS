@@ -2,11 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { serviceProvidersAPI } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
+import {
+  CubeIcon,
+  BuildingOfficeIcon,
+  PhoneIcon,
+  EnvelopeIcon,
+  MapPinIcon,
+  ArrowRightIcon,
+  CheckCircleIcon,
+  ClockIcon,
+} from '@heroicons/react/24/outline';
 
 const ServiceProviders = () => {
   const [providers, setProviders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
 
   useEffect(() => {
     fetchProviders();
@@ -29,82 +40,78 @@ const ServiceProviders = () => {
   if (error) return <div className="text-red-500 text-center p-4">{error}</div>;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <div className="mb-12 text-center">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-4">
             Select Service Provider
           </h1>
-          <p className="text-gray-600">
-            Choose a service provider to view their inventory and place orders
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Choose a service provider to view their GRM inventory and place machine allotment orders
           </p>
         </div>
 
         {/* Service Providers Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {providers.map((provider) => (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+          {providers.map((provider, index) => (
             <div
               key={provider.id}
-              className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden"
+              className="group relative bg-white rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden transform hover:-translate-y-2"
+              style={{ animationDelay: `${index * 200}ms` }}
             >
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                      <span className="text-blue-600 font-bold text-lg">
-                        {provider.code.charAt(0)}
-                      </span>
+              {/* Gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              
+              <div className="relative p-8">
+                <div className="flex items-start justify-between mb-6">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
+                      <CubeIcon className="h-8 w-8 text-white" />
                     </div>
                     <div>
-                      <h3 className="text-xl font-semibold text-gray-900">
+                      <h3 className="text-2xl font-bold text-gray-900 mb-1">
                         {provider.name}
                       </h3>
-                      <p className="text-sm text-gray-500">{provider.code}</p>
+                      <p className="text-sm text-gray-500 font-medium">{provider.code}</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                      Active
-                    </span>
+                  <div className="flex items-center space-x-2">
+                    <CheckCircleIcon className="h-5 w-5 text-green-500" />
+                    <span className="text-sm font-medium text-green-600">Active</span>
                   </div>
                 </div>
 
-                <p className="text-gray-600 mb-4">{provider.description}</p>
+                <p className="text-gray-600 mb-6 leading-relaxed">{provider.description}</p>
 
-                <div className="space-y-2 mb-6">
-                  <div className="flex items-center text-sm text-gray-500">
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                    </svg>
-                    {provider.contact}
+                <div className="space-y-3 mb-8">
+                  <div className="flex items-center text-gray-600">
+                    <PhoneIcon className="h-5 w-5 mr-3 text-blue-500" />
+                    <span className="text-sm">{provider.contact}</span>
                   </div>
-                  <div className="flex items-center text-sm text-gray-500">
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                    {provider.email}
+                  <div className="flex items-center text-gray-600">
+                    <EnvelopeIcon className="h-5 w-5 mr-3 text-blue-500" />
+                    <span className="text-sm">{provider.email}</span>
                   </div>
-                  <div className="flex items-center text-sm text-gray-500">
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    {provider.address}
+                  <div className="flex items-start text-gray-600">
+                    <MapPinIcon className="h-5 w-5 mr-3 mt-0.5 text-blue-500 flex-shrink-0" />
+                    <span className="text-sm">{provider.address}</span>
                   </div>
                 </div>
 
-                <div className="flex space-x-3">
+                <div className="flex space-x-4">
                   <Link
                     to={`/inventory/${provider.id}`}
-                    className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors duration-200 text-center font-medium"
+                    className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 text-center font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center"
                   >
-                    View Inventory
+                    <BuildingOfficeIcon className="h-5 w-5 mr-2" />
+                    View GRM Inventory
                   </Link>
                   <Link
                     to={`/order/${provider.id}`}
-                    className="flex-1 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors duration-200 text-center font-medium"
+                    className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-3 rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-300 text-center font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center"
                   >
+                    <ArrowRightIcon className="h-5 w-5 mr-2" />
                     Place Order
                   </Link>
                 </div>
@@ -114,45 +121,39 @@ const ServiceProviders = () => {
         </div>
 
         {/* Quick Stats */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white rounded-lg shadow p-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-white rounded-2xl shadow-xl p-6 transform hover:scale-105 transition-all duration-300">
             <div className="flex items-center">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+              <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg">
+                <CubeIcon className="h-8 w-8 text-white" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-500">Total Providers</p>
-                <p className="text-2xl font-semibold text-gray-900">{providers.length}</p>
+                <p className="text-3xl font-bold text-gray-900">{providers.length}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-xl p-6 transform hover:scale-105 transition-all duration-300">
             <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                </svg>
+              <div className="p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg">
+                <BuildingOfficeIcon className="h-8 w-8 text-white" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-500">Total POS Machines</p>
-                <p className="text-2xl font-semibold text-gray-900">641</p>
+                <p className="text-3xl font-bold text-gray-900">641</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-xl p-6 transform hover:scale-105 transition-all duration-300">
             <div className="flex items-center">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                </svg>
+              <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl shadow-lg">
+                <ClockIcon className="h-8 w-8 text-white" />
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-500">Total Soundbox</p>
-                <p className="text-2xl font-semibold text-gray-900">1000</p>
+                <p className="text-3xl font-bold text-gray-900">1000</p>
               </div>
             </div>
           </div>

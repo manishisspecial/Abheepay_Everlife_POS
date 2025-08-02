@@ -1,45 +1,16 @@
 const express = require('express');
+const { body, validationResult } = require('express-validator');
+const dbService = require('../services/databaseService');
+
 const router = express.Router();
 
-// Import demo data from centralized file
-const { demoDistributors } = require('../data/demoData');
-
 // @route   GET /api/distributors
-// @desc    Get all distributors with filters
+// @desc    Get all distributors
 // @access  Public
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   try {
-    const { status, search } = req.query;
-    
-    let filteredDistributors = [...demoDistributors];
-    
-    // Apply filters
-    if (status && status !== 'all') {
-      filteredDistributors = filteredDistributors.filter(distributor => distributor.status === status);
-    }
-    
-    if (search) {
-      const searchLower = search.toLowerCase();
-      filteredDistributors = filteredDistributors.filter(distributor =>
-        distributor.name.toLowerCase().includes(searchLower) ||
-        distributor.email.toLowerCase().includes(searchLower) ||
-        distributor.company_name.toLowerCase().includes(searchLower) ||
-        distributor.address.toLowerCase().includes(searchLower)
-      );
-    }
-    
-    // Get statistics
-    const stats = {
-      total: demoDistributors.length,
-      active: demoDistributors.filter(d => d.status === 'ACTIVE').length,
-      inactive: demoDistributors.filter(d => d.status === 'INACTIVE').length
-    };
-    
-    res.json({
-      distributors: filteredDistributors,
-      stats,
-      total: filteredDistributors.length
-    });
+    const distributors = await dbService.getAllDistributors();
+    res.json(distributors);
     
   } catch (error) {
     console.error('Get distributors error:', error);
@@ -50,18 +21,16 @@ router.get('/', (req, res) => {
 // @route   GET /api/distributors/:id
 // @desc    Get distributor by ID
 // @access  Public
-router.get('/:id', (req, res) => {
+router.get('/:id', async (req, res) => {
   try {
-    const distributor = demoDistributors.find(d => d.id === req.params.id);
-    
-    if (!distributor) {
-      return res.status(404).json({ error: 'Distributor not found' });
-    }
-    
+    const distributor = await dbService.getDistributorById(req.params.id);
     res.json(distributor);
     
   } catch (error) {
     console.error('Get distributor error:', error);
+    if (error.message === 'Distributor not found') {
+      return res.status(404).json({ error: 'Distributor not found' });
+    }
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -69,35 +38,25 @@ router.get('/:id', (req, res) => {
 // @route   POST /api/distributors
 // @desc    Create a new distributor
 // @access  Public
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   try {
-    const { email, name, phone, address, company_name, gst_number } = req.body;
+    const { email, name, phone, address, company_name, gst_number, contact_person } = req.body;
     
     // Validate required fields
     if (!email || !name || !phone) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
     
-    // Check if distributor with same email already exists
-    const existingDistributor = demoDistributors.find(d => d.email === email);
-    if (existingDistributor) {
-      return res.status(400).json({ error: 'Distributor with this email already exists' });
-    }
-    
-    const newDistributor = {
-      id: (demoDistributors.length + 1).toString(),
+    // Create distributor using database service
+    const newDistributor = await dbService.createDistributor({
       email,
       name,
       phone,
       address: address || '',
       company_name: company_name || '',
       gst_number: gst_number || '',
-      status: 'ACTIVE',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-    
-    demoDistributors.push(newDistributor);
+      contact_person: contact_person || name
+    });
     
     res.status(201).json({
       message: 'Distributor created successfully',
@@ -106,6 +65,9 @@ router.post('/', (req, res) => {
     
   } catch (error) {
     console.error('Create distributor error:', error);
+    if (error.message.includes('already exists')) {
+      return res.status(400).json({ error: error.message });
+    }
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -113,20 +75,9 @@ router.post('/', (req, res) => {
 // @route   PUT /api/distributors/:id
 // @desc    Update distributor
 // @access  Public
-router.put('/:id', (req, res) => {
+router.put('/:id', async (req, res) => {
   try {
-    const distributorIndex = demoDistributors.findIndex(d => d.id === req.params.id);
-    
-    if (distributorIndex === -1) {
-      return res.status(404).json({ error: 'Distributor not found' });
-    }
-    
-    const updatedDistributor = { 
-      ...demoDistributors[distributorIndex], 
-      ...req.body,
-      updated_at: new Date().toISOString()
-    };
-    demoDistributors[distributorIndex] = updatedDistributor;
+    const updatedDistributor = await dbService.updateDistributor(req.params.id, req.body);
     
     res.json({
       message: 'Distributor updated successfully',
@@ -135,6 +86,9 @@ router.put('/:id', (req, res) => {
     
   } catch (error) {
     console.error('Update distributor error:', error);
+    if (error.message === 'Distributor not found') {
+      return res.status(404).json({ error: 'Distributor not found' });
+    }
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -142,15 +96,9 @@ router.put('/:id', (req, res) => {
 // @route   DELETE /api/distributors/:id
 // @desc    Delete distributor
 // @access  Public
-router.delete('/:id', (req, res) => {
+router.delete('/:id', async (req, res) => {
   try {
-    const distributorIndex = demoDistributors.findIndex(d => d.id === req.params.id);
-    
-    if (distributorIndex === -1) {
-      return res.status(404).json({ error: 'Distributor not found' });
-    }
-    
-    const deletedDistributor = demoDistributors.splice(distributorIndex, 1)[0];
+    const deletedDistributor = await dbService.deleteDistributor(req.params.id);
     
     res.json({
       message: 'Distributor deleted successfully',
@@ -159,9 +107,11 @@ router.delete('/:id', (req, res) => {
     
   } catch (error) {
     console.error('Delete distributor error:', error);
+    if (error.message === 'Distributor not found') {
+      return res.status(404).json({ error: 'Distributor not found' });
+    }
     res.status(500).json({ error: 'Server error' });
   }
 });
 
-module.exports = router;
-module.exports.demoDistributors = demoDistributors; 
+module.exports = router; 

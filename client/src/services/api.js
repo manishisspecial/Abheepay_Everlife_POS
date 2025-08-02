@@ -78,8 +78,7 @@ export const machinesAPI = {
   bulkImport: (machines) =>
     api.post('/machines/bulk-import', { machines }).then(res => res.data),
   
-  getAssignmentHistory: (id) =>
-    api.get(`/machines/${id}/assignments`).then(res => res.data),
+
 };
 
 
@@ -100,9 +99,6 @@ export const distributorsAPI = {
   
   delete: (id) =>
     api.delete(`/distributors/${id}`).then(res => res.data),
-  
-  getAssignments: (id) =>
-    api.get(`/distributors/${id}/assignments`).then(res => res.data),
   
   getMachines: (id) =>
     api.get(`/distributors/${id}/machines`).then(res => res.data),
@@ -128,18 +124,12 @@ export const retailersAPI = {
   getByDistributor: (distributorId) =>
     api.get(`/retailers/distributor/${distributorId}`).then(res => res.data),
   
-  getAssignments: (id) =>
-    api.get(`/retailers/${id}/assignments`).then(res => res.data),
-  
   getMachines: (id) =>
     api.get(`/retailers/${id}/machines`).then(res => res.data),
 };
 
 // Reports API
 export const reportsAPI = {
-  getAssignments: (params) =>
-    api.get('/reports/assignments', { params }).then(res => res.data),
-  
   getMachines: (params) =>
     api.get('/reports/machines', { params }).then(res => res.data),
   
