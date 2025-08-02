@@ -4,15 +4,12 @@ import {
   EnvelopeIcon,
   PhoneIcon,
   ShieldCheckIcon,
-  CogIcon,
   BellIcon,
   KeyIcon,
   EyeIcon,
   EyeSlashIcon,
   CheckCircleIcon,
-  ArrowRightOnRectangleIcon,
   MapPinIcon,
-  CalendarIcon,
   BuildingOfficeIcon,
   CameraIcon,
   PencilIcon,
@@ -21,12 +18,14 @@ import {
   LockClosedIcon,
   DevicePhoneMobileIcon,
   ClockIcon,
+  Cog6ToothIcon,
+  WrenchScrewdriverIcon,
 } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
 
 const Profile = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [activeTab, setActiveTab] = useState('profile');
+  const [activeTab, setActiveTab] = useState('overview');
   const [isEditing, setIsEditing] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -36,17 +35,26 @@ const Profile = () => {
     name: 'System Administrator',
     email: 'admin@abheepay.com',
     phone: '+91-9876543210',
-    role: 'Admin',
+    role: 'Administrator',
     avatar: null,
     department: 'IT Management',
     location: 'Mumbai, Maharashtra',
     joinDate: '2024-01-01',
     lastLogin: '2024-01-15T10:30:00.000Z',
     status: 'Active',
-    employeeId: 'EMP001',
-    manager: 'John Doe',
+    employeeId: 'ADM001',
+    manager: 'CEO',
     timezone: 'Asia/Kolkata',
-    language: 'English'
+    language: 'English',
+    permissions: ['Full Access', 'User Management', 'System Configuration', 'Reports Access'],
+    systemAccess: {
+      dashboard: true,
+      users: true,
+      machines: true,
+      orders: true,
+      reports: true,
+      settings: true
+    }
   };
 
   const [formData, setFormData] = useState({
@@ -62,12 +70,17 @@ const Profile = () => {
       push: true,
       systemUpdates: true,
       securityAlerts: true,
-      orderNotifications: true
+      orderNotifications: true,
+      userActivity: true,
+      systemAlerts: true
     },
     preferences: {
       theme: 'light',
       language: 'English',
-      timezone: 'Asia/Kolkata'
+      timezone: 'Asia/Kolkata',
+      dashboardLayout: 'default',
+      autoRefresh: true,
+      compactMode: false
     }
   });
 
@@ -100,14 +113,14 @@ const Profile = () => {
   };
 
   const handleDeleteAccount = () => {
-    toast.error('Account deletion requires additional verification.');
+    toast.success('Account deletion request submitted.');
     setShowDeleteConfirm(false);
   };
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
-      month: 'long',
+      month: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
@@ -125,6 +138,14 @@ const Profile = () => {
     }
   };
 
+  const tabs = [
+    { id: 'overview', name: 'Overview', icon: UserIcon },
+    { id: 'security', name: 'Security', icon: ShieldCheckIcon },
+    { id: 'notifications', name: 'Notifications', icon: BellIcon },
+    { id: 'preferences', name: 'Preferences', icon: Cog6ToothIcon },
+    { id: 'system', name: 'System Access', icon: WrenchScrewdriverIcon }
+  ];
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -133,24 +154,18 @@ const Profile = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                Profile Settings
+                Administrator Profile
               </h1>
               <p className="mt-2 text-lg text-gray-600">
-                Manage your account settings, security preferences, and personal information
+                Manage your account settings and system access
               </p>
             </div>
-            <div className="flex items-center space-x-4">
-              <div className="text-right">
-                <p className="text-sm text-gray-500">Last login</p>
-                <p className="text-sm font-medium text-gray-900 flex items-center">
-                  <ClockIcon className="h-4 w-4 mr-1" />
-                  {formatDate(user.lastLogin)}
-                </p>
-              </div>
-              <button className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-sm transition-all duration-200">
-                <ArrowRightOnRectangleIcon className="h-4 w-4 mr-2" />
-                Logout
-              </button>
+            <div className="text-right">
+              <p className="text-sm text-gray-500">Last login</p>
+              <p className="text-sm font-medium text-gray-900 flex items-center">
+                <ClockIcon className="h-4 w-4 mr-1" />
+                {formatDate(user.lastLogin)}
+              </p>
             </div>
           </div>
         </div>
@@ -172,19 +187,15 @@ const Profile = () => {
                   <CheckCircleIcon className="h-4 w-4 mr-2" />
                   {user.status}
                 </div>
-                <div className="mt-4 text-sm text-gray-500">
+                <div className="mt-4 text-sm text-gray-500 space-y-1">
                   <p>Employee ID: {user.employeeId}</p>
                   <p>Department: {user.department}</p>
+                  <p>Location: {user.location}</p>
                 </div>
               </div>
 
               <nav className="mt-8 space-y-2">
-                {[
-                  { id: 'profile', name: 'Profile Information', icon: UserIcon },
-                  { id: 'security', name: 'Security Settings', icon: ShieldCheckIcon },
-                  { id: 'notifications', name: 'Notifications', icon: BellIcon },
-                  { id: 'preferences', name: 'Preferences', icon: CogIcon }
-                ].map((tab) => (
+                {tabs.map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
@@ -204,177 +215,187 @@ const Profile = () => {
 
           {/* Enhanced Main Content */}
           <div className="lg:col-span-3">
-            {activeTab === 'profile' && (
-              <div className="bg-white shadow-2xl rounded-2xl border border-gray-100 overflow-hidden">
-                <div className="px-8 py-6 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-blue-50">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h2 className="text-2xl font-bold text-gray-900">Profile Information</h2>
-                      <p className="text-sm text-gray-600 mt-1">Update your personal information and contact details</p>
+            {activeTab === 'overview' && (
+              <div className="space-y-6">
+                {/* Profile Information Card */}
+                <div className="bg-white shadow-2xl rounded-2xl border border-gray-100 overflow-hidden">
+                  <div className="px-8 py-6 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-blue-50">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h2 className="text-2xl font-bold text-gray-900">Profile Information</h2>
+                        <p className="text-sm text-gray-600 mt-1">Your personal and contact information</p>
+                      </div>
+                      <button
+                        onClick={() => setIsEditing(!isEditing)}
+                        className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                          isEditing 
+                            ? 'border border-gray-300 text-gray-700 bg-white hover:bg-gray-50'
+                            : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 shadow-lg'
+                        }`}
+                      >
+                        <PencilIcon className="h-4 w-4 mr-2" />
+                        {isEditing ? 'Cancel' : 'Edit Profile'}
+                      </button>
                     </div>
-                    <button
-                      onClick={() => setIsEditing(!isEditing)}
-                      className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
-                        isEditing 
-                          ? 'border border-gray-300 text-gray-700 bg-white hover:bg-gray-50'
-                          : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 shadow-lg'
-                      }`}
-                    >
-                      <PencilIcon className="h-4 w-4 mr-2" />
-                      {isEditing ? 'Cancel' : 'Edit Profile'}
-                    </button>
+                  </div>
+
+                  <div className="p-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="space-y-6">
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-3">
+                            Full Name
+                          </label>
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                              <UserIcon className="h-5 w-5 text-gray-400" />
+                            </div>
+                            <input
+                              type="text"
+                              value={formData.name}
+                              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                              disabled={!isEditing}
+                              className="block w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 transition-all duration-200"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-3">
+                            Email Address
+                          </label>
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                              <EnvelopeIcon className="h-5 w-5 text-gray-400" />
+                            </div>
+                            <input
+                              type="email"
+                              value={formData.email}
+                              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                              disabled={!isEditing}
+                              className="block w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 transition-all duration-200"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-3">
+                            Phone Number
+                          </label>
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                              <PhoneIcon className="h-5 w-5 text-gray-400" />
+                            </div>
+                            <input
+                              type="tel"
+                              value={formData.phone}
+                              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                              disabled={!isEditing}
+                              className="block w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 transition-all duration-200"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-6">
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-3">
+                            Role
+                          </label>
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                              <ShieldCheckIcon className="h-5 w-5 text-gray-400" />
+                            </div>
+                            <div className="block w-full pl-12 pr-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl text-sm text-blue-900 font-medium">
+                              {user.role}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-3">
+                            Department
+                          </label>
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                              <BuildingOfficeIcon className="h-5 w-5 text-gray-400" />
+                            </div>
+                            <div className="block w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700">
+                              {user.department}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-3">
+                            Location
+                          </label>
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                              <MapPinIcon className="h-5 w-5 text-gray-400" />
+                            </div>
+                            <div className="block w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700">
+                              {user.location}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {isEditing && (
+                      <div className="mt-8 flex justify-end space-x-4">
+                        <button
+                          onClick={() => setIsEditing(false)}
+                          className="px-6 py-3 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handleSave}
+                          className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-sm font-medium hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-lg transition-all duration-200"
+                        >
+                          Save Changes
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                <div className="p-8">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="space-y-6">
+                {/* System Access Card */}
+                <div className="bg-white shadow-2xl rounded-2xl border border-gray-100 overflow-hidden">
+                  <div className="px-8 py-6 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-green-50">
+                    <div className="flex items-center">
+                      <WrenchScrewdriverIcon className="h-8 w-8 text-green-600 mr-3" />
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-3">
-                          Full Name
-                        </label>
-                        <div className="relative">
-                          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <UserIcon className="h-5 w-5 text-gray-400" />
-                          </div>
-                          <input
-                            type="text"
-                            value={formData.name}
-                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            disabled={!isEditing}
-                            className="block w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 transition-all duration-200"
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-3">
-                          Email Address
-                        </label>
-                        <div className="relative">
-                          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <EnvelopeIcon className="h-5 w-5 text-gray-400" />
-                          </div>
-                          <input
-                            type="email"
-                            value={formData.email}
-                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                            disabled={!isEditing}
-                            className="block w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 transition-all duration-200"
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-3">
-                          Phone Number
-                        </label>
-                        <div className="relative">
-                          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <PhoneIcon className="h-5 w-5 text-gray-400" />
-                          </div>
-                          <input
-                            type="tel"
-                            value={formData.phone}
-                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                            disabled={!isEditing}
-                            className="block w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 transition-all duration-200"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-6">
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-3">
-                          Role
-                        </label>
-                        <div className="relative">
-                          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <ShieldCheckIcon className="h-5 w-5 text-gray-400" />
-                          </div>
-                          <div className="block w-full pl-12 pr-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl text-sm text-blue-900 font-medium">
-                            {user.role}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-3">
-                          Department
-                        </label>
-                        <div className="relative">
-                          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <BuildingOfficeIcon className="h-5 w-5 text-gray-400" />
-                          </div>
-                          <div className="block w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700">
-                            {user.department}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-3">
-                          Location
-                        </label>
-                        <div className="relative">
-                          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <MapPinIcon className="h-5 w-5 text-gray-400" />
-                          </div>
-                          <div className="block w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700">
-                            {user.location}
-                          </div>
-                        </div>
+                        <h2 className="text-2xl font-bold text-gray-900">System Access</h2>
+                        <p className="text-sm text-gray-600 mt-1">Your current system permissions and access levels</p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-3">
-                        Join Date
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                          <CalendarIcon className="h-5 w-5 text-gray-400" />
+                  <div className="p-8">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {Object.entries(user.systemAccess).map(([key, hasAccess]) => (
+                        <div key={key} className="flex items-center p-4 bg-gray-50 rounded-xl">
+                          <div className={`w-3 h-3 rounded-full mr-3 ${hasAccess ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                          <span className="text-sm font-medium text-gray-700 capitalize">
+                            {key.replace(/([A-Z])/g, ' $1').trim()}
+                          </span>
                         </div>
-                        <div className="block w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700">
-                          {formatDate(user.joinDate)}
-                        </div>
-                      </div>
+                      ))}
                     </div>
-
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-3">
-                        Last Login
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                          <ClockIcon className="h-5 w-5 text-gray-400" />
-                        </div>
-                        <div className="block w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700">
-                          {formatDate(user.lastLogin)}
-                        </div>
+                    
+                    <div className="mt-6 p-4 bg-blue-50 rounded-xl">
+                      <h3 className="text-sm font-semibold text-blue-900 mb-2">Permissions</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {user.permissions.map((permission, index) => (
+                          <span key={index} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            {permission}
+                          </span>
+                        ))}
                       </div>
                     </div>
                   </div>
-
-                  {isEditing && (
-                    <div className="mt-8 flex justify-end space-x-4">
-                      <button
-                        onClick={() => setIsEditing(false)}
-                        className="px-6 py-3 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={handleSave}
-                        className="px-6 py-3 border border-transparent rounded-xl text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-lg transition-all duration-200"
-                      >
-                        Save Changes
-                      </button>
-                    </div>
-                  )}
                 </div>
               </div>
             )}
@@ -697,6 +718,103 @@ const Profile = () => {
                     </div>
                   </div>
                 )}
+              </div>
+            )}
+
+            {activeTab === 'system' && (
+              <div className="space-y-6">
+                {/* System Access Management */}
+                <div className="bg-white shadow-2xl rounded-2xl border border-gray-100 overflow-hidden">
+                  <div className="px-8 py-6 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-green-50">
+                    <div className="flex items-center">
+                      <WrenchScrewdriverIcon className="h-8 w-8 text-green-600 mr-3" />
+                      <div>
+                        <h2 className="text-2xl font-bold text-gray-900">System Access Management</h2>
+                        <p className="text-sm text-gray-600 mt-1">Manage your system permissions and access levels</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-8">
+                    <div className="space-y-8">
+                      {/* Current Access Levels */}
+                      <div>
+                        <h3 className="text-xl font-semibold text-gray-900 mb-6">Current Access Levels</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {Object.entries(user.systemAccess).map(([key, hasAccess]) => (
+                            <div key={key} className="flex items-center justify-between p-6 bg-gray-50 rounded-2xl border border-gray-200">
+                              <div className="flex items-center">
+                                <div className={`w-3 h-3 rounded-full mr-4 ${hasAccess ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                                <div>
+                                  <p className="text-lg font-semibold text-gray-900 capitalize">
+                                    {key.replace(/([A-Z])/g, ' $1').trim()}
+                                  </p>
+                                  <p className="text-sm text-gray-600">
+                                    {hasAccess ? 'Full access granted' : 'Access restricted'}
+                                  </p>
+                                </div>
+                              </div>
+                              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                hasAccess 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : 'bg-gray-100 text-gray-800'
+                              }`}>
+                                {hasAccess ? 'Active' : 'Inactive'}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Permissions Overview */}
+                      <div>
+                        <h3 className="text-xl font-semibold text-gray-900 mb-6">Administrative Permissions</h3>
+                        <div className="p-6 bg-blue-50 rounded-2xl border border-blue-200">
+                          <div className="flex items-center mb-4">
+                            <ShieldCheckIcon className="h-6 w-6 text-blue-600 mr-3" />
+                            <h4 className="text-lg font-semibold text-blue-900">Full System Access</h4>
+                          </div>
+                          <p className="text-sm text-blue-800 mb-4">
+                            As a system administrator, you have complete access to all system features and can manage all aspects of the POS/Soundbox management system.
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {user.permissions.map((permission, index) => (
+                              <span key={index} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                {permission}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* System Activity */}
+                      <div>
+                        <h3 className="text-xl font-semibold text-gray-900 mb-6">Recent System Activity</h3>
+                        <div className="space-y-4">
+                          {[
+                            { action: 'User Management', time: '2 hours ago', status: 'Completed' },
+                            { action: 'System Configuration', time: '1 day ago', status: 'Completed' },
+                            { action: 'Report Generation', time: '3 days ago', status: 'Completed' },
+                            { action: 'Security Update', time: '1 week ago', status: 'Completed' }
+                          ].map((activity, index) => (
+                            <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200">
+                              <div className="flex items-center">
+                                <div className="w-2 h-2 bg-green-500 rounded-full mr-4"></div>
+                                <div>
+                                  <p className="text-sm font-medium text-gray-900">{activity.action}</p>
+                                  <p className="text-xs text-gray-500">{activity.time}</p>
+                                </div>
+                              </div>
+                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                {activity.status}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>
