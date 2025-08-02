@@ -117,7 +117,7 @@ const EnhancedOrderBooking = () => {
         }),
       });
 
-      const order = await orderResponse.json();
+      await orderResponse.json();
 
       if (orderResponse.ok) {
         // Create assignments for each machine

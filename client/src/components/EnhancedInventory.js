@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -14,18 +14,8 @@ const EnhancedInventory = () => {
     search: ''
   });
   const [selectedMachines, setSelectedMachines] = useState([]);
-  const [stats, setStats] = useState({});
 
-  useEffect(() => {
-    fetchServiceProvider();
-    fetchMachines();
-  }, [providerId]);
-
-  useEffect(() => {
-    fetchMachines();
-  }, [filters]);
-
-  const fetchServiceProvider = async () => {
+  const fetchServiceProvider = useCallback(async () => {
     try {
       const response = await fetch(`/api/service-providers/${providerId}`);
       const data = await response.json();
@@ -33,9 +23,9 @@ const EnhancedInventory = () => {
     } catch (error) {
       console.error('Error fetching service provider:', error);
     }
-  };
+  }, [providerId]);
 
-  const fetchMachines = async () => {
+  const fetchMachines = useCallback(async () => {
     try {
       setLoading(true);
       const queryParams = new URLSearchParams();
@@ -53,23 +43,17 @@ const EnhancedInventory = () => {
       ];
       
       setMachines(allMachines);
-      setStats(data.summary || {});
     } catch (error) {
       console.error('Error fetching machines:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [providerId, filters]);
 
-  const fetchStats = async () => {
-    try {
-      const response = await fetch(`/api/service-providers/${providerId}/inventory`);
-      const data = await response.json();
-      setStats(data.summary || {});
-    } catch (error) {
-      console.error('Error fetching stats:', error);
-    }
-  };
+  useEffect(() => {
+    fetchServiceProvider();
+    fetchMachines();
+  }, [fetchServiceProvider, fetchMachines]);
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));

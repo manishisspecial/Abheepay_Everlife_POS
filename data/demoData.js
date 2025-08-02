@@ -2,37 +2,43 @@
 
 // Demo machines data with Telering-390, Everlife-251 POS machines and 1000 soundbox machines
 const demoMachines = [
-  // Telering-390 POS Machines (10 machines)
-  { id: '1', serialNumber: 'TLR390001', mid: 'MID390001', tid: 'TID390001', type: 'POS', model: 'Telering-390', manufacturer: 'Telering', status: 'AVAILABLE', partner: 'In stock', partnerType: 'B2C' },
-  { id: '2', serialNumber: 'TLR390002', mid: 'MID390002', tid: 'TID390002', type: 'POS', model: 'Telering-390', manufacturer: 'Telering', status: 'AVAILABLE', partner: 'In stock', partnerType: 'B2C' },
-  { id: '3', serialNumber: 'TLR390003', mid: 'MID390003', tid: 'TID390003', type: 'POS', model: 'Telering-390', manufacturer: 'Telering', status: 'AVAILABLE', partner: 'In stock', partnerType: 'B2C' },
-  { id: '4', serialNumber: 'TLR390004', mid: 'MID390004', tid: 'TID390004', type: 'POS', model: 'Telering-390', manufacturer: 'Telering', status: 'AVAILABLE', partner: 'In stock', partnerType: 'B2C' },
-  { id: '5', serialNumber: 'TLR390005', mid: 'MID390005', tid: 'TID390005', type: 'POS', model: 'Telering-390', manufacturer: 'Telering', status: 'AVAILABLE', partner: 'In stock', partnerType: 'B2C' },
-  { id: '6', serialNumber: 'TLR390006', mid: 'MID390006', tid: 'TID390006', type: 'POS', model: 'Telering-390', manufacturer: 'Telering', status: 'AVAILABLE', partner: 'In stock', partnerType: 'B2C' },
-  { id: '7', serialNumber: 'TLR390007', mid: 'MID390007', tid: 'TID390007', type: 'POS', model: 'Telering-390', manufacturer: 'Telering', status: 'AVAILABLE', partner: 'In stock', partnerType: 'B2C' },
-  { id: '8', serialNumber: 'TLR390008', mid: 'MID390008', tid: 'TID390008', type: 'POS', model: 'Telering-390', manufacturer: 'Telering', status: 'AVAILABLE', partner: 'In stock', partnerType: 'B2C' },
-  { id: '9', serialNumber: 'TLR390009', mid: 'MID390009', tid: 'TID390009', type: 'POS', model: 'Telering-390', manufacturer: 'Telering', status: 'AVAILABLE', partner: 'In stock', partnerType: 'B2C' },
-  { id: '10', serialNumber: 'TLR390010', mid: 'MID390010', tid: 'TID390010', type: 'POS', model: 'Telering-390', manufacturer: 'Telering', status: 'AVAILABLE', partner: 'In stock', partnerType: 'B2C' },
+  // Telering-390 POS Machines (390 machines)
+  ...Array.from({ length: 390 }, (_, i) => ({
+    id: (i + 1).toString(),
+    serialNumber: `TLR390${(i + 1).toString().padStart(3, '0')}`,
+    mid: `MID390${(i + 1).toString().padStart(3, '0')}`,
+    tid: `TID390${(i + 1).toString().padStart(3, '0')}`,
+    type: 'POS',
+    model: 'Telering-390',
+    manufacturer: 'Telering',
+    status: 'AVAILABLE',
+    partner: 'In stock',
+    partnerType: 'B2C'
+  })),
   
-  // Everlife-251 POS Machines (10 machines)
-  { id: '11', serialNumber: 'EVL251001', mid: 'MID251001', tid: 'TID251001', type: 'POS', model: 'Everlife-251', manufacturer: 'Everlife', status: 'AVAILABLE', partner: 'In stock', partnerType: 'B2C' },
-  { id: '12', serialNumber: 'EVL251002', mid: 'MID251002', tid: 'TID251002', type: 'POS', model: 'Everlife-251', manufacturer: 'Everlife', status: 'AVAILABLE', partner: 'In stock', partnerType: 'B2C' },
-  { id: '13', serialNumber: 'EVL251003', mid: 'MID251003', tid: 'TID251003', type: 'POS', model: 'Everlife-251', manufacturer: 'Everlife', status: 'AVAILABLE', partner: 'In stock', partnerType: 'B2C' },
-  { id: '14', serialNumber: 'EVL251004', mid: 'MID251004', tid: 'TID251004', type: 'POS', model: 'Everlife-251', manufacturer: 'Everlife', status: 'AVAILABLE', partner: 'In stock', partnerType: 'B2C' },
-  { id: '15', serialNumber: 'EVL251005', mid: 'MID251005', tid: 'TID251005', type: 'POS', model: 'Everlife-251', manufacturer: 'Everlife', status: 'AVAILABLE', partner: 'In stock', partnerType: 'B2C' },
-  { id: '16', serialNumber: 'EVL251006', mid: 'MID251006', tid: 'TID251006', type: 'POS', model: 'Everlife-251', manufacturer: 'Everlife', status: 'AVAILABLE', partner: 'In stock', partnerType: 'B2C' },
-  { id: '17', serialNumber: 'EVL251007', mid: 'MID251007', tid: 'TID251007', type: 'POS', model: 'Everlife-251', manufacturer: 'Everlife', status: 'AVAILABLE', partner: 'In stock', partnerType: 'B2C' },
-  { id: '18', serialNumber: 'EVL251008', mid: 'MID251008', tid: 'TID251008', type: 'POS', model: 'Everlife-251', manufacturer: 'Everlife', status: 'AVAILABLE', partner: 'In stock', partnerType: 'B2C' },
-  { id: '19', serialNumber: 'EVL251009', mid: 'MID251009', tid: 'TID251009', type: 'POS', model: 'Everlife-251', manufacturer: 'Everlife', status: 'AVAILABLE', partner: 'In stock', partnerType: 'B2C' },
-  { id: '20', serialNumber: 'EVL251010', mid: 'MID251010', tid: 'TID251010', type: 'POS', model: 'Everlife-251', manufacturer: 'Everlife', status: 'AVAILABLE', partner: 'In stock', partnerType: 'B2C' }
+  // Everlife-251 POS Machines (251 machines)
+  ...Array.from({ length: 251 }, (_, i) => ({
+    id: (i + 391).toString(),
+    serialNumber: `EVL251${(i + 1).toString().padStart(3, '0')}`,
+    mid: `MID251${(i + 1).toString().padStart(3, '0')}`,
+    tid: `TID251${(i + 1).toString().padStart(3, '0')}`,
+    type: 'POS',
+    model: 'Everlife-251',
+    manufacturer: 'Everlife',
+    status: 'AVAILABLE',
+    partner: 'In stock',
+    partnerType: 'B2C'
+  }))
 ];
 
-// Generate 1000 soundbox machines
+// Generate soundbox machines: Telering-1000, Everlife-0
 const generateSoundboxMachines = () => {
   const soundboxMachines = [];
+  
+  // Telering Soundbox machines (1000 machines)
   for (let i = 1; i <= 1000; i++) {
-    const machineId = i + 20; // Start after POS machines
-    const serialNumber = `SB${i.toString().padStart(6, '0')}`;
+    const machineId = i + 641; // Start after POS machines (390 + 251)
+    const serialNumber = `TLRSB${i.toString().padStart(6, '0')}`;
     const mid = `MIDSB${i.toString().padStart(6, '0')}`;
     const tid = `TIDSB${i.toString().padStart(6, '0')}`;
     const qrCode = `QR_SB${i.toString().padStart(6, '0')}`;
@@ -45,7 +51,7 @@ const generateSoundboxMachines = () => {
       tid,
       type: 'SOUNDBOX',
       model: 'SoundBox-1000',
-      manufacturer: 'Abheepay',
+      manufacturer: 'Telering',
       status: 'AVAILABLE',
       partner: 'In stock',
       partnerType: 'B2C',
@@ -53,6 +59,9 @@ const generateSoundboxMachines = () => {
       hasStandee
     });
   }
+  
+  // Everlife has 0 soundbox machines as requested
+  
   return soundboxMachines;
 };
 

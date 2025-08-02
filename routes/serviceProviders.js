@@ -70,7 +70,7 @@ router.get('/:id/inventory', async (req, res) => {
         machine.machine_type === 'SOUNDBOX'
       );
     } else if (provider.code === 'EVERLIFE') {
-      // Everlife machines: Everlife-251 POS
+      // Everlife machines: Everlife-251 POS and 0 Soundbox
       posMachines = allMachines.filter(machine => 
         machine.manufacturer === 'Everlife' && 
         machine.machine_type === 'POS'

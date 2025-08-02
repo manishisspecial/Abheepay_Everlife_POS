@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import LoadingSpinner from '../components/LoadingSpinner';
 import {
   ComputerDesktopIcon,
@@ -13,11 +12,9 @@ import {
   BuildingOfficeIcon,
   ArrowRightIcon,
   TrashIcon,
-  PencilIcon,
 } from '@heroicons/react/24/outline';
 
 const Assignments = () => {
-  const navigate = useNavigate();
   const [assignments, setAssignments] = useState([]);
   const [availableMachines, setAvailableMachines] = useState([]);
   const [distributors, setDistributors] = useState([]);
